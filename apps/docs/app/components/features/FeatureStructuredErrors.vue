@@ -18,7 +18,7 @@ const pills = [
   <section class="py-24 md:py-32">
     <Motion
       :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-      :in-view="{ opacity: 1, y: 0 }"
+      :while-in-view="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.5 }"
       :in-view-options="{ once: true }"
       class="mb-10"
@@ -55,7 +55,7 @@ const pills = [
     <div class="grid gap-6 lg:grid-cols-2">
       <Motion
         :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-        :in-view="{ opacity: 1, y: 0 }"
+        :while-in-view="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
@@ -81,7 +81,7 @@ const pills = [
 
       <Motion
         :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-        :in-view="{ opacity: 1, y: 0 }"
+        :while-in-view="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.5, delay: 0.2 }"
         :in-view-options="{ once: true }"
       >

@@ -182,7 +182,7 @@ const frameworks = [
   <section class="py-24 md:py-32">
     <Motion
       :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-      :in-view="{ opacity: 1, y: 0 }"
+      :while-in-view="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.5 }"
       :in-view-options="{ once: true }"
       class="mb-10 text-center"
@@ -211,7 +211,7 @@ const frameworks = [
 
     <Motion
       :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }"
-      :in-view="{ opacity: 1, y: 0 }"
+      :while-in-view="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.4, delay: 0.1 }"
       :in-view-options="{ once: true }"
       class="mb-8 flex flex-wrap items-end justify-center gap-2 md:gap-3 mx-auto"
@@ -241,7 +241,7 @@ const frameworks = [
 
     <Motion
       :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-      :in-view="{ opacity: 1, y: 0 }"
+      :while-in-view="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.5, delay: 0.2 }"
       :in-view-options="{ once: true }"
       class="mx-auto max-w-3xl"

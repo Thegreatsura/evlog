@@ -64,7 +64,7 @@ onMounted(() => {
     <div class="relative z-10 pt-24 md:pt-32 text-center max-w-2xl mx-auto px-6">
       <Motion
         :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-        :in-view="{ opacity: 1, y: 0 }"
+        :while-in-view="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.5 }"
         :in-view-options="{ once: true }"
       >

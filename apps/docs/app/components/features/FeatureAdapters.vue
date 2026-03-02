@@ -235,7 +235,7 @@ function setupCanvas() {
       <div class="flex flex-col gap-8">
         <Motion
           :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-          :in-view="{ opacity: 1, y: 0 }"
+          :while-in-view="{ opacity: 1, y: 0 }"
           :transition="{ duration: 0.5 }"
           :in-view-options="{ once: true }"
         >
@@ -273,7 +273,7 @@ function setupCanvas() {
 
         <Motion
           :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-          :in-view="{ opacity: 1, y: 0 }"
+          :while-in-view="{ opacity: 1, y: 0 }"
           :transition="{ duration: 0.5, delay: 0.15 }"
           :in-view-options="{ once: true }"
         >
@@ -317,7 +317,7 @@ function setupCanvas() {
 
       <Motion
         :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }"
-        :in-view="{ opacity: 1, y: 0 }"
+        :while-in-view="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
