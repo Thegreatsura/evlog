@@ -189,7 +189,7 @@
     },
     "packages/evlog": {
       "name": "evlog",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "devDependencies": {
         "@nuxt/devtools": "^3.2.2",
         "@nuxt/schema": "^4.3.1",
@@ -197,7 +197,7 @@
         "changelogen": "^0.6.2",
         "consola": "^3.4.2",
         "h3": "^1.15.5",
-        "happy-dom": "^20.7.0",
+        "happy-dom": "^20.7.2",
         "nitro": "^3.0.1-alpha.2",
         "nitropack": "^2.13.1",
         "nuxt": "^4.3.1",
@@ -2198,7 +2198,7 @@
 
     "h3-v2": ["h3@2.0.1-rc.14", "", { "dependencies": { "rou3": "^0.7.12", "srvx": "^0.11.2" }, "peerDependencies": { "crossws": "^0.4.1" }, "optionalPeers": ["crossws"], "bin": { "h3": "bin/h3.mjs" } }, "sha512-163qbGmTr/9rqQRNuqMqtgXnOUAkE4KTdauiC9y0E5iG1I65kte9NyfWvZw5RTDMt6eY+DtyoNzrQ9wA2BfvGQ=="],
 
-    "happy-dom": ["happy-dom@20.7.0", "", { "dependencies": { "@types/node": ">=20.0.0", "@types/whatwg-mimetype": "^3.0.2", "@types/ws": "^8.18.1", "entities": "^7.0.1", "whatwg-mimetype": "^3.0.0", "ws": "^8.18.3" } }, "sha512-hR/uLYQdngTyEfxnOoa+e6KTcfBFyc1hgFj/Cc144A5JJUuHFYqIEBDcD4FeGqUeKLRZqJ9eN9u7/GDjYEgS1g=="],
+    "happy-dom": ["happy-dom@20.7.2", "", { "dependencies": { "@types/node": ">=20.0.0", "@types/whatwg-mimetype": "^3.0.2", "@types/ws": "^8.18.1", "entities": "^7.0.1", "whatwg-mimetype": "^3.0.0", "ws": "^8.18.3" } }, "sha512-J3zofqwyCWLzjcOSanu4BCUmbMVTrxcEwwbFQSiTh1kfYlkQITefPRBa0Esfy+kzLenjQpcSNKcIqpUTcfpWhA=="],
 
     "has-flag": ["has-flag@4.0.0", "", {}, "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ=="],
 
