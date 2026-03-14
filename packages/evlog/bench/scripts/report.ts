@@ -71,8 +71,7 @@ async function loadJSON<T>(path: string): Promise<T | null> {
   try {
     const raw = await Bun.file(path).text()
     return JSON.parse(raw) as T
-  }
-  catch {
+  } catch {
     return null
   }
 }

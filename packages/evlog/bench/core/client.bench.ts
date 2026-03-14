@@ -141,7 +141,7 @@ describe('pipeline — buffer overflow', () => {
 describe('pipeline — serialization in drain', () => {
   bench('push 50 + JSON.stringify batch in drain', () => {
     const pipeline = createDrainPipeline<DrainContext>({ batch: { size: 50, intervalMs: 60_000 } })
-    const drain = pipeline(async (batch) => {
+    const drain = pipeline((batch) => {
       JSON.stringify(batch.map(ctx => ctx.event))
     })
     for (let i = 0; i < 50; i++) drain(makeDrainCtx(i))

@@ -24,7 +24,7 @@ interface SizeReport {
   total: { raw: number, gzip: number }
 }
 
-const DIST_DIR = new URL('../dist/', import.meta.url).pathname
+const DIST_DIR = new URL('../../dist/', import.meta.url).pathname
 
 const ENTRY_POINTS: Record<string, string> = {
   'core (index)': 'index.mjs',
