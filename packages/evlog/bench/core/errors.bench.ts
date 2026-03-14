@@ -1,6 +1,6 @@
 import { bench, describe } from 'vitest'
-import { createError, EvlogError } from '../src/error'
-import { parseError } from '../src/runtime/utils/parseError'
+import { createError } from '../../src/error'
+import { parseError } from '../../src/runtime/utils/parseError'
 
 describe('createError', () => {
   bench('string message', () => {

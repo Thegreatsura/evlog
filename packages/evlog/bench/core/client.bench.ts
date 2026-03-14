@@ -1,8 +1,7 @@
 import { bench, describe } from 'vitest'
-import type { DrainContext, WideEvent } from '../src/types'
-import { createDrainPipeline } from '../src/pipeline'
-
-// --- Client log serialization ---
+import type { DrainContext } from '../../src/types'
+import { createDrainPipeline } from '../../src/pipeline'
+import { makeDrainCtx } from './_fixtures'
 
 const minimalLog = {
   timestamp: '2025-01-15T10:30:00.000Z',
@@ -93,26 +92,6 @@ describe('client log formatting', () => {
     JSON.stringify(formatted)
   })
 })
-
-// --- Drain pipeline ---
-
-function makeDrainCtx(i = 0): DrainContext {
-  return {
-    event: {
-      timestamp: '2025-01-15T10:30:00.000Z',
-      level: 'info',
-      service: 'bench',
-      environment: 'production',
-      method: 'POST',
-      path: '/api/checkout',
-      status: 200,
-      duration: '12ms',
-      userId: `usr_${i}`,
-    } as unknown as WideEvent,
-    request: { method: 'POST', path: '/api/checkout', requestId: `req_${i}` },
-    headers: { 'content-type': 'application/json' },
-  }
-}
 
 describe('pipeline — push throughput', () => {
   bench('push 1 event (no flush)', () => {

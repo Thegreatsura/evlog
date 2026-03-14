@@ -1,45 +1,30 @@
 import { bench, describe } from 'vitest'
-import type { EnrichContext } from '../src/types'
+import type { EnrichContext } from '../../src/types'
 import {
   createGeoEnricher,
   createRequestSizeEnricher,
   createTraceContextEnricher,
   createUserAgentEnricher,
-} from '../src/enrichers'
-
-const chromeUA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-const firefoxUA = 'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0'
-const botUA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
-
-function makeCtx(headers: Record<string, string>): EnrichContext {
-  return {
-    event: {} as Record<string, unknown>,
-    headers,
-    request: { method: 'GET', path: '/api/test', requestId: 'req_123' },
-  }
-}
+} from '../../src/enrichers'
+import { makeEnrichCtx, USER_AGENTS } from './_fixtures'
 
 describe('createUserAgentEnricher', () => {
   const enrich = createUserAgentEnricher()
 
   bench('Chrome desktop', () => {
-    const ctx = makeCtx({ 'user-agent': chromeUA })
-    enrich(ctx)
+    enrich(makeEnrichCtx({ 'user-agent': USER_AGENTS.chrome }))
   })
 
   bench('Firefox Linux', () => {
-    const ctx = makeCtx({ 'user-agent': firefoxUA })
-    enrich(ctx)
+    enrich(makeEnrichCtx({ 'user-agent': USER_AGENTS.firefox }))
   })
 
   bench('Googlebot', () => {
-    const ctx = makeCtx({ 'user-agent': botUA })
-    enrich(ctx)
+    enrich(makeEnrichCtx({ 'user-agent': USER_AGENTS.bot }))
   })
 
   bench('no user-agent header', () => {
-    const ctx = makeCtx({})
-    enrich(ctx)
+    enrich(makeEnrichCtx({}))
   })
 })
 
@@ -47,25 +32,22 @@ describe('createGeoEnricher', () => {
   const enrich = createGeoEnricher()
 
   bench('Vercel headers (full)', () => {
-    const ctx = makeCtx({
+    enrich(makeEnrichCtx({
       'x-vercel-ip-country': 'US',
       'x-vercel-ip-country-region': 'California',
       'x-vercel-ip-country-region-code': 'CA',
       'x-vercel-ip-city': 'San Francisco',
       'x-vercel-ip-latitude': '37.7749',
       'x-vercel-ip-longitude': '-122.4194',
-    })
-    enrich(ctx)
+    }))
   })
 
   bench('Cloudflare headers (country only)', () => {
-    const ctx = makeCtx({ 'cf-ipcountry': 'DE' })
-    enrich(ctx)
+    enrich(makeEnrichCtx({ 'cf-ipcountry': 'DE' }))
   })
 
   bench('no geo headers', () => {
-    const ctx = makeCtx({})
-    enrich(ctx)
+    enrich(makeEnrichCtx({}))
   })
 })
 
@@ -73,14 +55,13 @@ describe('createRequestSizeEnricher', () => {
   const enrich = createRequestSizeEnricher()
 
   bench('with content-length', () => {
-    const ctx = makeCtx({ 'content-length': '1024' })
+    const ctx = makeEnrichCtx({ 'content-length': '1024' })
     ctx.response = { headers: { 'content-length': '2048' } }
     enrich(ctx)
   })
 
   bench('no content-length', () => {
-    const ctx = makeCtx({})
-    enrich(ctx)
+    enrich(makeEnrichCtx({}))
   })
 })
 
@@ -88,23 +69,20 @@ describe('createTraceContextEnricher', () => {
   const enrich = createTraceContextEnricher()
 
   bench('with traceparent', () => {
-    const ctx = makeCtx({
-      'traceparent': '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
-    })
-    enrich(ctx)
+    enrich(makeEnrichCtx({
+      traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+    }))
   })
 
   bench('with traceparent + tracestate', () => {
-    const ctx = makeCtx({
-      'traceparent': '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
-      'tracestate': 'congo=t61rcWkgMzE',
-    })
-    enrich(ctx)
+    enrich(makeEnrichCtx({
+      traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+      tracestate: 'congo=t61rcWkgMzE',
+    }))
   })
 
   bench('no trace headers', () => {
-    const ctx = makeCtx({})
-    enrich(ctx)
+    enrich(makeEnrichCtx({}))
   })
 })
 
@@ -117,7 +95,7 @@ describe('full enricher pipeline', () => {
   ]
 
   const fullHeaders = {
-    'user-agent': chromeUA,
+    'user-agent': USER_AGENTS.chrome,
     'x-vercel-ip-country': 'US',
     'x-vercel-ip-city': 'San Francisco',
     'x-vercel-ip-latitude': '37.7749',

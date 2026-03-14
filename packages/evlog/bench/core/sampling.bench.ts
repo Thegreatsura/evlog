@@ -1,5 +1,5 @@
 import { bench, describe } from 'vitest'
-import { createLogger, initLogger, shouldKeep } from '../src/logger'
+import { createLogger, initLogger, shouldKeep } from '../../src/logger'
 
 describe('head sampling', () => {
   bench('no sampling configured', () => {

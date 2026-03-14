@@ -1,12 +1,11 @@
 import { bench, describe } from 'vitest'
-import { createLogger, initLogger } from '../src/logger'
+import { createLogger, initLogger } from '../../src/logger'
+import { PAYLOADS } from './_fixtures'
 
 const baseContext = {
   method: 'POST',
   path: '/api/checkout',
-  user: { id: '123', plan: 'pro', email: 'user@example.com' },
-  cart: { items: 3, total: 9999, currency: 'USD' },
-  payment: { method: 'card', last4: '4242' },
+  ...PAYLOADS.shallow,
   requestId: 'req_abc123def456',
 }
 

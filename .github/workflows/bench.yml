@@ -6,7 +6,8 @@ on:
       - main
     paths:
       - 'packages/evlog/src/**'
-      - 'packages/evlog/bench/**'
+      - 'packages/evlog/bench/core/**'
+      - 'packages/evlog/bench/scripts/**'
       - '!packages/evlog/bench/baseline/**'
       - 'packages/evlog/tsdown.config.ts'
   pull_request:
@@ -14,7 +15,8 @@ on:
       - main
     paths:
       - 'packages/evlog/src/**'
-      - 'packages/evlog/bench/**'
+      - 'packages/evlog/bench/core/**'
+      - 'packages/evlog/bench/scripts/**'
       - '!packages/evlog/bench/baseline/**'
       - 'packages/evlog/tsdown.config.ts'
       - 'packages/evlog/vitest.config.ts'
@@ -46,7 +48,7 @@ jobs:
 
       - name: Measure bundle size
         working-directory: packages/evlog
-        run: bun bench/size.ts --json > bench/baseline/size.json
+        run: bun bench/scripts/size.ts --json > bench/baseline/size.json
 
       - name: Update baseline
         working-directory: packages/evlog
@@ -88,7 +90,7 @@ jobs:
 
       - name: Measure bundle size
         working-directory: packages/evlog
-        run: bun bench/size.ts --json > /tmp/size-current.json
+        run: bun bench/scripts/size.ts --json > /tmp/size-current.json
 
       - name: Run benchmarks
         working-directory: packages/evlog
@@ -104,7 +106,7 @@ jobs:
         working-directory: packages/evlog
         run: |
           set +e
-          REPORT=$(bun bench/compare.ts \
+          REPORT=$(bun bench/scripts/compare.ts \
             --bench /tmp/bench-baseline.json bench/results.json \
             --size /tmp/size-baseline.json /tmp/size-current.json)
           EXIT_CODE=$?

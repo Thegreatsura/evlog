@@ -1,12 +1,8 @@
 import { bench, describe } from 'vitest'
-import { createLogger, createRequestLogger, initLogger } from '../src/logger'
+import { createLogger, createRequestLogger } from '../../src/logger'
+import { initSilentLogger, PAYLOADS } from './_fixtures'
 
-initLogger({
-  env: { service: 'bench', environment: 'production' },
-  pretty: false,
-  silent: true,
-  _suppressDrainWarning: true,
-})
+initSilentLogger()
 
 describe('createLogger', () => {
   bench('no initial context', () => {
@@ -59,10 +55,7 @@ describe('log.set()', () => {
 
   bench('deep nested merge', () => {
     const log = createLogger()
-    log.set({
-      user: { id: '123', plan: 'pro', profile: { name: 'John', settings: { theme: 'dark' } } },
-      cart: { items: [{ id: 'a', qty: 1 }, { id: 'b', qty: 2 }], total: 9999 },
-    })
+    log.set(PAYLOADS.deep)
   })
 
   bench('multiple sequential sets', () => {
@@ -104,33 +97,21 @@ describe('log.emit()', () => {
 })
 
 describe('log.set() payload sizes', () => {
-  const smallPayload = { a: 1, b: 'hello' }
-
-  const mediumPayload: Record<string, unknown> = {}
-  for (let i = 0; i < 50; i++) {
-    mediumPayload[`field_${i}`] = i % 2 === 0 ? `value_${i}` : i
-  }
-
-  const largePayload: Record<string, unknown> = {}
-  for (let i = 0; i < 200; i++) {
-    largePayload[`field_${i}`] = { nested: { value: `data_${i}`, count: i } }
-  }
-
   bench('small payload (2 fields)', () => {
     const log = createLogger()
-    log.set(smallPayload)
+    log.set(PAYLOADS.simple)
     log.emit()
   })
 
   bench('medium payload (50 fields)', () => {
     const log = createLogger()
-    log.set(mediumPayload)
+    log.set(PAYLOADS.medium)
     log.emit()
   })
 
   bench('large payload (200 nested fields)', () => {
     const log = createLogger()
-    log.set(largePayload)
+    log.set(PAYLOADS.large)
     log.emit()
   })
 })
