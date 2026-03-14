@@ -7,6 +7,7 @@ on:
     paths:
       - 'packages/evlog/src/**'
       - 'packages/evlog/bench/**'
+      - '!packages/evlog/bench/baseline/**'
       - 'packages/evlog/tsdown.config.ts'
   pull_request:
     branches:
@@ -14,16 +15,17 @@ on:
     paths:
       - 'packages/evlog/src/**'
       - 'packages/evlog/bench/**'
+      - '!packages/evlog/bench/baseline/**'
       - 'packages/evlog/tsdown.config.ts'
       - 'packages/evlog/vitest.config.ts'
 
 jobs:
-  # On push to main: update baseline files in the repo
   update-baseline:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v6
@@ -48,21 +50,21 @@ jobs:
 
       - name: Update baseline
         working-directory: packages/evlog
-        run: cp bench/results.json bench/baseline/bench.json
-
-      - name: Commit baseline
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add packages/evlog/bench/baseline/
-          if git diff --cached --quiet; then
-            echo "No baseline changes to commit"
-          else
-            git commit -m "chore(bench): update baseline [skip ci]"
-            git push
-          fi
+          mkdir -p bench/baseline
+          cp bench/results.json bench/baseline/bench.json
 
-  # On PR: compare against committed baseline
+      - name: Create baseline PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(bench): update baseline"
+          title: "chore(bench): update baseline"
+          body: Automated benchmark baseline update from main.
+          branch: chore/update-bench-baseline
+          add-paths: packages/evlog/bench/baseline/
+          delete-branch: true
+          labels: performance
+
   compare:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -72,7 +74,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
