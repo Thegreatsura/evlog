@@ -19,18 +19,40 @@ const tree = computed(() => {
 
 const { public: pub } = useRuntimeConfig()
 const docsUrl = pub.docsUrl || 'https://www.evlog.dev'
-const siteUrl = pub.siteUrl || ''
+const siteUrl = pub.siteUrl || 'https://www.justfuckinguseevlog.com'
 
 const fm = computed(() => page.value as Record<string, string>)
 
 useHead({
   htmlAttrs: { lang: 'en' },
-  link: [{ rel: 'manifest', href: '/site.webmanifest' },],
+  link: [
+    { rel: 'manifest', href: '/site.webmanifest' },
+    { rel: 'canonical', href: `${siteUrl}/` },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        'name': 'evlog',
+        'description': 'Wide events and structured errors for TypeScript. One log per operation, all the context, zero scavenger hunt.',
+        'applicationCategory': 'DeveloperApplication',
+        'operatingSystem': 'Any',
+        'offers': { '@type': 'Offer', 'price': '0', 'priceCurrency': 'USD' },
+        'url': siteUrl,
+        'author': { '@type': 'Person', 'name': 'Hugo Richard', 'url': 'https://x.com/hugorcd' },
+        'license': 'https://opensource.org/licenses/MIT',
+      }),
+    },
+  ],
 })
 
 useSeoMeta({
-  title: () => fm.value.title,
+  title: 'evlog - Wide Events Logger for TypeScript',
   description: () => fm.value.description,
+  ogType: 'website',
+  ogUrl: `${siteUrl}/`,
   ogTitle: () => fm.value.ogTitle || fm.value.title,
   ogDescription: () => fm.value.ogDescription || fm.value.description,
   ogImage: `${siteUrl}/og.jpg`,

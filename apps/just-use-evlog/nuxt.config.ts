@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@comark/nuxt',
     '@vercel/analytics',
+    '@nuxtjs/sitemap',
   ],
 
   css: ['~/assets/css/main.css'],
@@ -30,7 +31,7 @@ export default defineNuxtConfig({
 
   site: {
     name: 'Just fucking use evlog',
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://example.com',
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.justfuckinguseevlog.com',
   },
 
   runtimeConfig: {

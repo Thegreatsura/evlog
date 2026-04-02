@@ -33,6 +33,22 @@ INFO  done
 
 Seven lines. Zero narrative. You end up in Slack asking "who touched checkout?" while mentally stitching fragments across log entries. **This is the debugging you've normalized.** Fine, but stop pretending scattered `console.log` is "good enough."
 
+And let's be honest, your error handling probably looks like this:
+
+```ts [checkout.ts]
+try {
+  const user = await getUser(id)
+  console.log('user loaded') // loaded what? which user?
+  const result = await charge(user)
+  console.log('charge ok') // ok how? what amount?
+} catch (e) {
+  console.error(e) // good luck with "Error: undefined"
+  throw e
+}
+```
+
+No user context. No business data. No actionable error message. When this fails in prod, you get a Slack thread, a Sentry alert with a stack trace pointing to line 4, and three engineers spending 20 minutes piecing together what happened.
+
 Now imagine the same checkout, with evlog:
 
 ```json [wide-event.json]
@@ -167,30 +183,24 @@ Same code pattern, same output, every framework. Human-readable in dev, structur
 
 ## Why it's fucking great
 
-### Zero transitive dependencies
+### 0 transitive dependencies
 
-No peer deps, no polyfills, no bundler drama. Drains use platform `fetch`. The filesystem drain uses Node's `fs`. Nothing to audit, nothing that breaks on the next Node LTS.
+No peer deps, no polyfills, no bundler drama. Nothing to audit, nothing that breaks on the next Node LTS. Just one `bun add evlog` and you're done.
 
-### Emit is automatic (or manual, your call)
+### 9 frameworks, same API
 
-In framework mode, hooks call emit at request end. You add context with `log.set()`, the rest is wired. In standalone mode, you call `log.emit()` when the operation is done. Either way: no "remember to flush" surprise.
+Nuxt, Next.js, Nitro, Express, Fastify, Hono, Elysia, NestJS, TanStack Start. Add the middleware, get wide events. Switch frameworks, keep the same `log.set()` pattern.
 
-### Send logs anywhere, out of the box
+### 6 drain adapters, plug and play
 
-**Axiom, OTLP** (Grafana, Datadog, Honeycomb…)**, Sentry, PostHog, Better Stack, HyperDX**: six built-in adapters, or two lines of `fetch()` if you roll your own. Sending is async, batched, out-of-band. Your users don't wait on your log pipeline.
+Axiom, OTLP (Grafana, Datadog, Honeycomb), Sentry, PostHog, Better Stack, HyperDX. Two lines of config. Async, batched, out-of-band. Your users don't wait on your log pipeline.
 
-### A filesystem drain your agents can read
+### AI SDK integration, built in
 
-Write NDJSON to disk locally. Your AI agents, your scripts, and your teammates can query structured context **without a Datadog subscription**. Wide events work for incidents. They also work for evals.
-
-### AI routes stop being a black box
-
-Wrap the model once with `createAILogger`. Token usage, tool calls, streaming metrics, finish reason: all land in the **same** wide event as the HTTP request.
+Wrap the model once. Token usage, tool calls, streaming metrics, finish reason: all land in the **same** wide event.
 
 ```ts [server/api/chat.post.ts]
-const log = useLogger(event)
 const ai = createAILogger(log)
-
 const result = streamText({
   model: ai.wrap('anthropic/claude-sonnet-4.6'),
   messages,
@@ -199,13 +209,17 @@ const result = streamText({
 
 No callback conflicts. No separate pipeline for AI observability.
 
-### Sampling that actually works
+### Head + tail sampling
 
-Drop 90% of `info` in prod, keep 100% of errors, and force-keep anything slower than 1s or matching `/api/checkout/**`. Head sampling controls volume. Tail sampling catches the events you'd regret losing. Two config blocks, no custom code.
+Drop 90% of `info` in prod, keep 100% of errors, force-keep anything slower than 1s. Two config blocks, no custom code. Stop storing noise and missing the incidents.
 
-### Errors that explain themselves
+### Structured errors with `why` and `fix`
 
-`createError({ why, fix, link })`. Parse with `parseError()` on the client. Your error toast can finally tell users *what went wrong* and *what to do about it*.
+`createError({ why, fix, link })` on the server. `parseError()` on the client. Your error toast finally tells users *what went wrong* and *what to do about it*. Your on-call finally stops reverse-engineering stack traces.
+
+### A filesystem drain for agents and scripts
+
+Write NDJSON to disk. Your AI agents, scripts, and teammates query structured events **without a Datadog subscription**. Wide events work for incidents and evals.
 
 ---
 
@@ -229,17 +243,17 @@ No you won't. Ship the pattern now or keep debugging the hard way forever.
 
 ---
 
-## When you should actually use this
+## Still here? Good.
 
-- You write TypeScript (APIs, jobs, scripts, workflows) and you're tired of **piecing together what happened from scattered logs**.
-- You want **one artifact per operation** with business context and outcome together.
-- You want errors your frontend, and agents, can **parse and act on**.
-- You need sampling + drains without building a **second product** inside your repo.
-- You're instrumenting AI calls and want usage and tool data in the **same** event as the rest of the operation.
+You've read this far, which means your logs are probably bad and you know it. Here's what happens when you add evlog:
 
-## Enough excuses.
+**Day 1**: You add the middleware. Your routes start emitting wide events. You open your first dashboard query and realize you can filter by `user.plan`, `cart.total`, `status`. You've never had that before.
 
-evlog isn't magic. It's **accumulate, emit once, drain safely, keep what matters**. Stop cargo-culting a dozen `console.log` calls per handler and calling it "good enough."
+**Week 1**: A payment bug hits prod. Instead of the usual 30-minute Slack thread, someone opens the event, sees `why: "Card declined by issuer"`, and closes the ticket in two minutes.
+
+**Month 1**: Your AI routes have token usage and tool call data in every event. Your sampling config drops 90% of noise. Your on-call rotations get shorter. You stop writing "add better logging" in sprint retrospectives.
+
+This isn't aspirational. This is what structured wide events do when you stop treating logging as an afterthought.
 
 ::landing-ctas
 ::
