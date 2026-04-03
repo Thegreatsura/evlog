@@ -18,6 +18,7 @@ export default defineNuxtConfig({
   },
 
   modules: [
+    '@nuxt/fonts',
     'motion-v/nuxt',
     'nuxt-studio',
     '@vercel/analytics',
@@ -30,8 +31,14 @@ export default defineNuxtConfig({
 
   fonts: {
     families: [
-      { name: 'Geist', weights: [400, 600, 700], global: true },
-      { name: 'Geist Mono', weights: [400, 600], global: true },
+      { name: 'Geist', weights: [400, 500, 600, 700], global: true },
+      { name: 'Geist Mono', weights: [400, 500, 600, 700], global: true },
+      {
+        name: 'Geist Pixel Line',
+        src: '/fonts/GeistPixel-Line.ttf',
+        weights: [400, 500, 600],
+        global: true,
+      },
     ],
   },
 

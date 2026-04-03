@@ -11,7 +11,7 @@ ogHeadline: Stop overthinking your logs
 # Just fucking use evlog.
 
 ```bash [Terminal]
-npx skills add hugorcd/evlog
+npx skills add https://www.evlog.dev
 ```
 
 You've been told to "add more logs" until your stdout looks like a twitch chat. You've opened Sentry at 3am and stared at a stack trace with zero context. You've told a junior "correlate by request id" while knowing half your handlers never set one. That isn't observability. It's hope with a JSON formatter.

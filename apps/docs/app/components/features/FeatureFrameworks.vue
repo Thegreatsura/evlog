@@ -59,10 +59,10 @@ const frameworkRows = [
             <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </div>
         </div>
-        <p v-if="$slots.description" class="mt-4 text-sm text-zinc-400 max-w-md mx-auto">
+        <p v-if="$slots.description" class="mt-4 text-sm text-muted max-w-md mx-auto">
           <slot name="description" mdc-unwrap="p" />
         </p>
-        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
           {{ props.linkLabel || 'Learn more' }}
           <UIcon name="i-lucide-arrow-right" class="size-3" />
         </NuxtLink>
@@ -88,18 +88,18 @@ const frameworkRows = [
           :to="fw.link"
           class="group flex flex-col items-center gap-2 px-4 py-3 border outline-none transition-all duration-300"
           :class="fw.tab !== undefined && activeTab === fw.tab
-            ? 'border-accent-blue/30 bg-accent-blue/5'
-            : 'border-transparent hover:border-zinc-800'"
+            ? 'border-primary/30 bg-primary/5'
+            : 'border-transparent hover:border-muted'"
           @click="fw.tab !== undefined ? activeTab = fw.tab : undefined"
         >
           <UIcon
             :name="fw.icon"
             class="size-8 sm:size-10 transition-colors duration-300"
-            :class="fw.tab !== undefined && activeTab === fw.tab ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-300'"
+            :class="fw.tab !== undefined && activeTab === fw.tab ? 'text-white' : 'text-muted group-hover:text-highlighted'"
           />
           <span
             class="font-mono text-xs whitespace-nowrap transition-colors duration-300"
-            :class="fw.tab !== undefined && activeTab === fw.tab ? 'text-zinc-300' : 'text-zinc-500 group-hover:text-zinc-300'"
+            :class="fw.tab !== undefined && activeTab === fw.tab ? 'text-highlighted' : 'text-dimmed group-hover:text-highlighted'"
           >
             {{ fw.name }}
           </span>

@@ -1041,7 +1041,7 @@ Skills follow the [Agent Skills](https://agentskills.io/) specification. Compati
 To manually install with the skills CLI:
 
 ```bash
-npx skills add hugorcd/evlog
+npx skills add https://www.evlog.dev
 ```
 
 ## Credits

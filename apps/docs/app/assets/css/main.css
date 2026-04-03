@@ -1,27 +1,21 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+@theme static {
+  --color-blue-400: #2853ff;
+  --color-blue-500: #2853ff;
+}
+
 @theme {
   --font-sans: "Geist", sans-serif;
   --font-mono: "Geist Mono", monospace;
   --font-pixel: "Geist Pixel Line", monospace;
   --font-pixel-square: "Geist Pixel Square", monospace;
-
-  /* Accent Colors */
-  --color-accent-blue: #2853FF;
-  --color-accent-glow: rgba(40, 83, 255, 0.4);
-  --color-dark-bg: #030303;
-  --color-dark-surface: #0a0a0c;
-  --color-dark-border: #1a1a20;
 }
 
 :root {
   --ui-radius: 0;
-  --ui-primary: var(--color-accent-blue);
-}
-
-.dark {
-  --ui-bg: var(--color-dark-bg);
+  --ui-bg: var(--color-zinc-950);
 }
 
 @layer base {
@@ -30,13 +24,12 @@
   }
 
   html, body {
-    @apply bg-dark-bg text-white;
+    @apply bg-default text-default;
   }
 }
 
-/* Section label with dot */
 .section-label {
-  @apply font-pixel text-[10px] uppercase tracking-widest text-zinc-500 mb-4 flex items-center;
+  @apply font-pixel text-[10px] uppercase tracking-widest text-dimmed mb-4 flex items-center;
 }
 
 .section-label::before {
@@ -44,54 +37,18 @@
   display: inline-block;
   width: 4px;
   height: 4px;
-  background-color: var(--ui-primary);
+  background-color: var(--ui-color-primary-500);
   margin-right: 0.5rem;
-  box-shadow: 0 0 8px var(--ui-primary);
+  box-shadow: 0 0 8px var(--ui-color-primary-500);
 }
 
 .section-title {
-  @apply font-pixel text-4xl md:text-5xl lg:text-6xl tracking-tight text-white;
+  @apply font-pixel text-4xl md:text-5xl lg:text-6xl tracking-tight text-highlighted;
   text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
-/* Abstract Tech Grid Background */
-.tech-grid {
-  background-image:
-    linear-gradient(to right, var(--color-dark-border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-dark-border) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
-}
-
-.glow-border {
-  position: relative;
-}
-.glow-border::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(145deg, var(--color-accent-glow), transparent 40%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* Fade mask for scroll areas */
-.fade-bottom {
-  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-}
-
-.landing-code {
-  --ui-bg-muted: #0c0c0e;
-  --ui-border-muted: #27272a;
-  --ui-bg: #0c0c0e;
-}
-
 .landing-code pre[style] {
-  background-color: #0c0c0e !important;
+  background-color: var(--ui-bg-muted) !important;
 }
 
 .landing-code > div > div {

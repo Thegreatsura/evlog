@@ -5,7 +5,7 @@ const prefersReducedMotion = ref(false)
 const copied = ref(false)
 
 async function copyCommand() {
-  await navigator.clipboard.writeText('npx skills add hugorcd/evlog')
+  await navigator.clipboard.writeText('npx skills add https://www.evlog.dev')
   copied.value = true
   setTimeout(() => {
     copied.value = false
@@ -18,8 +18,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="relative overflow-hidden bg-dark-bg">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-white/4 rounded-full blur-3xl pointer-events-none" />
+  <section class="relative overflow-hidden bg-default">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full blur-3xl pointer-events-none" />
     <div class="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto pt-28 lg:pt-32 pb-4 px-6">
       <Motion
         :initial="prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 16 }"
@@ -27,14 +27,14 @@ onMounted(() => {
         :transition="{ duration: 0.5 }"
       >
         <button
-          class="mb-1 flex items-center gap-2 font-pixel-square text-xs px-4 py-1.5 rounded-full border border-dark-border bg-dark-surface/80 backdrop-blur-sm transition-all hover:border-accent-blue/50 cursor-copy"
-          :class="copied ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'"
+          class="mb-1 flex items-center gap-2 font-pixel-square text-xs px-4 py-1.5 rounded-full border border-muted backdrop-blur-sm transition-all hover:border-primary/50 cursor-copy"
+          :class="copied ? 'text-emerald-400' : 'text-dimmed hover:text-highlighted'"
           @click="copyCommand"
         >
           <span v-if="copied">Copied!</span>
           <span v-else class="flex items-center gap-2">
-            <span class="text-accent-blue">$</span>
-            npx skills add hugorcd/evlog
+            <span class="text-primary">$</span>
+            npx skills add https://www.evlog.dev
           </span>
         </button>
       </Motion>
@@ -46,10 +46,10 @@ onMounted(() => {
       >
         <div class="relative">
           <h1 class="section-title mb-5 leading-[1.1]">
-            <slot name="title" mdc-unwrap="p" /><span class="text-accent-blue">.</span>
+            <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </h1>
           <div aria-hidden="true" class="absolute inset-0 section-title mb-5 leading-[1.1] blur-xs animate-pulse pointer-events-none">
-            <slot name="title" mdc-unwrap="p" /><span class="text-accent-blue">.</span>
+            <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </div>
         </div>
       </Motion>
@@ -59,7 +59,7 @@ onMounted(() => {
         :animate="{ opacity: 1, y: 0 }"
         :transition="{ duration: 0.5, delay: 0.16 }"
       >
-        <p class="mb-8 max-w-xl text-base/7 text-zinc-400 font-sans">
+        <p class="mb-8 max-w-xl text-base/7 text-muted font-sans">
           <slot name="description" mdc-unwrap="p" />
         </p>
       </Motion>
@@ -73,7 +73,7 @@ onMounted(() => {
           <UButton
             to="/getting-started/installation"
             size="lg"
-            class="bg-accent-blue hover:bg-blue-600 text-white font-medium"
+            class="bg-primary hover:bg-blue-600 text-white font-medium"
             trailing-icon="i-lucide-arrow-right"
             label="Fix your logs"
           />
@@ -82,7 +82,7 @@ onMounted(() => {
             target="_blank"
             size="lg"
             variant="ghost"
-            class="text-zinc-400 hover:text-white"
+            class="text-muted hover:text-white"
             label="GitHub"
             leading-icon="i-simple-icons-github"
           />

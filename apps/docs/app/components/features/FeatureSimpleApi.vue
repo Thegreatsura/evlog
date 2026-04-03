@@ -72,20 +72,20 @@ function setOutput(type: 'success' | 'error') {
             <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </div>
         </div>
-        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-zinc-400">
+        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-muted">
           <slot name="description" mdc-unwrap="p" />
         </p>
         <div class="mt-5 flex flex-wrap gap-2">
           <span
             v-for="pill in pills"
             :key="pill.label"
-            class="inline-flex items-center gap-1.5 border border-zinc-800 bg-zinc-900/50 px-3 py-1 font-mono text-[11px] text-zinc-400"
+            class="inline-flex items-center gap-1.5 border border-muted bg-elevated/50 px-3 py-1 font-mono text-[11px] text-muted"
           >
             <UIcon :name="pill.icon" class="size-3 text-emerald-500" />
             {{ pill.label }}
           </span>
         </div>
-        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
           {{ props.linkLabel || 'Learn more' }}
           <UIcon name="i-lucide-arrow-right" class="size-3" />
         </NuxtLink>
@@ -100,14 +100,14 @@ function setOutput(type: 'success' | 'error') {
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
-        <div class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div class="h-full overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">checkout.post.ts</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">checkout.post.ts</span>
           </div>
           <div class="p-5 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto">
             <!-- eslint-disable vue/multiline-html-element-content-newline -->
@@ -139,20 +139,20 @@ function setOutput(type: 'success' | 'error') {
         :transition="{ duration: 0.5, delay: 0.2 }"
         :in-view-options="{ once: true }"
       >
-        <div ref="outputRef" class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div ref="outputRef" class="h-full overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">output</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">output</span>
             <div class="ml-auto flex items-center gap-1.5">
               <button
                 class="font-mono text-[10px] px-2 py-0.5 border transition-all duration-300 outline-none cursor-pointer"
                 :class="activeOutput === 'success'
                   ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'"
+                  : 'border-transparent text-dimmed hover:text-muted'"
                 @click="setOutput('success')"
               >
                 200
@@ -161,7 +161,7 @@ function setOutput(type: 'success' | 'error') {
                 class="font-mono text-[10px] px-2 py-0.5 border transition-all duration-300 outline-none cursor-pointer"
                 :class="activeOutput === 'error'
                   ? 'border-red-500/30 bg-red-500/10 text-red-500'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'"
+                  : 'border-transparent text-dimmed hover:text-muted'"
                 @click="setOutput('error')"
               >
                 402
@@ -180,28 +180,28 @@ function setOutput(type: 'success' | 'error') {
                 <span class="font-medium text-emerald-500">INFO</span>
                 <span class="text-violet-400">POST</span>
                 <span class="text-amber-400">/api/checkout</span>
-                <span class="ml-auto text-zinc-600">(234ms)</span>
+                <span class="ml-auto text-dimmed">(234ms)</span>
               </div>
-              <div class="space-y-1 border-l-2 border-zinc-800 pl-4">
+              <div class="space-y-1 border-l-2 border-muted pl-4">
                 <div>
-                  <span class="text-sky-400">user</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-400"> { id: 1842, plan: "pro" }</span>
+                  <span class="text-sky-400">user</span><span class="text-dimmed">:</span>
+                  <span class="text-muted"> { id: 1842, plan: "pro" }</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">cart</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-400"> { items: 3, total: 9999 }</span>
+                  <span class="text-sky-400">cart</span><span class="text-dimmed">:</span>
+                  <span class="text-muted"> { items: 3, total: 9999 }</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">status</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">status</span><span class="text-dimmed">:</span>
                   <span class="text-emerald-400"> 200</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">requestId</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-500"> "req_8f2k..."</span>
+                  <span class="text-sky-400">requestId</span><span class="text-dimmed">:</span>
+                  <span class="text-dimmed"> "req_8f2k..."</span>
                 </div>
               </div>
-              <div class="mt-4 border-t border-zinc-800 pt-3">
-                <p class="text-xs text-zinc-500">
+              <div class="mt-4 border-t border-muted pt-3">
+                <p class="text-xs text-dimmed">
                   <span class="text-emerald-500">&#10003;</span> One log with full context
                 </p>
               </div>
@@ -220,24 +220,24 @@ function setOutput(type: 'success' | 'error') {
               </div>
               <div class="space-y-1 border-l-2 border-red-500/30 pl-4">
                 <div>
-                  <span class="text-sky-400">message</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-400"> "Payment failed"</span>
+                  <span class="text-sky-400">message</span><span class="text-dimmed">:</span>
+                  <span class="text-muted"> "Payment failed"</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">why</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-400"> "Card declined by issuer"</span>
+                  <span class="text-sky-400">why</span><span class="text-dimmed">:</span>
+                  <span class="text-muted"> "Card declined by issuer"</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">fix</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">fix</span><span class="text-dimmed">:</span>
                   <span class="text-emerald-400"> "Try a different card"</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">user</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-400"> { id: 1842, plan: "pro" }</span>
+                  <span class="text-sky-400">user</span><span class="text-dimmed">:</span>
+                  <span class="text-muted"> { id: 1842, plan: "pro" }</span>
                 </div>
               </div>
-              <div class="mt-4 border-t border-zinc-800 pt-3">
-                <p class="text-xs text-zinc-500">
+              <div class="mt-4 border-t border-muted pt-3">
+                <p class="text-xs text-dimmed">
                   <span class="text-emerald-500">&#10003;</span> Actionable error with context
                 </p>
               </div>

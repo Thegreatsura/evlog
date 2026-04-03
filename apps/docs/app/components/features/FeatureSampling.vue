@@ -115,20 +115,20 @@ function getLevelColor(level: string): string {
             <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </div>
         </div>
-        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-zinc-400">
+        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-muted">
           <slot name="description" mdc-unwrap="p" />
         </p>
         <div class="mt-5 flex flex-wrap gap-2">
           <span
             v-for="pill in pills"
             :key="pill.label"
-            class="inline-flex items-center gap-1.5 border border-zinc-800 bg-zinc-900/50 px-3 py-1 font-mono text-[11px] text-zinc-400"
+            class="inline-flex items-center gap-1.5 border border-muted bg-elevated/50 px-3 py-1 font-mono text-[11px] text-muted"
           >
             <UIcon :name="pill.icon" class="size-3 text-amber-500" />
             {{ pill.label }}
           </span>
         </div>
-        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
           {{ props.linkLabel || 'Learn more' }}
           <UIcon name="i-lucide-arrow-right" class="size-3" />
         </NuxtLink>
@@ -143,26 +143,26 @@ function getLevelColor(level: string): string {
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
-        <div class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div class="h-full overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">evlog.config.ts</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">evlog.config.ts</span>
           </div>
           <div class="p-5 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto">
             <!-- eslint-disable vue/multiline-html-element-content-newline -->
             <pre><code><span class="text-amber-400">initLogger</span>({
   <span class="text-sky-400">sampling</span>: {
-    <span class="text-zinc-500">// Head: per-level rates</span>
+    <span class="text-dimmed">// Head: per-level rates</span>
     <span class="text-sky-400">rates</span>: {
-      <span class="text-sky-400">info</span>:  <span class="text-pink-400">10</span>,   <span class="text-zinc-600">// keep 10%</span>
-      <span class="text-sky-400">warn</span>:  <span class="text-pink-400">50</span>,   <span class="text-zinc-600">// keep 50%</span>
-      <span class="text-sky-400">error</span>: <span class="text-pink-400">100</span>,  <span class="text-zinc-600">// always</span>
+      <span class="text-sky-400">info</span>:  <span class="text-pink-400">10</span>,   <span class="text-dimmed">// keep 10%</span>
+      <span class="text-sky-400">warn</span>:  <span class="text-pink-400">50</span>,   <span class="text-dimmed">// keep 50%</span>
+      <span class="text-sky-400">error</span>: <span class="text-pink-400">100</span>,  <span class="text-dimmed">// always</span>
     },
-    <span class="text-zinc-500">// Tail: force keep if match</span>
+    <span class="text-dimmed">// Tail: force keep if match</span>
     <span class="text-sky-400">keep</span>: [
       { <span class="text-sky-400">status</span>: <span class="text-pink-400">400</span> },
       { <span class="text-sky-400">duration</span>: <span class="text-pink-400">1000</span> },
@@ -182,22 +182,22 @@ function getLevelColor(level: string): string {
         :transition="{ duration: 0.5, delay: 0.2 }"
         :in-view-options="{ once: true }"
       >
-        <div ref="panelRef" class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div ref="panelRef" class="h-full overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">log stream</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">log stream</span>
             <div class="ml-auto flex items-center gap-3 font-mono text-[9px] tracking-wider">
               <span
                 class="transition-colors duration-300"
-                :class="phase === 'head' ? 'text-amber-500' : (phase !== 'idle' ? 'text-zinc-600' : 'text-zinc-700')"
+                :class="phase === 'head' ? 'text-amber-500' : (phase !== 'idle' ? 'text-dimmed' : 'text-dimmed')"
               >HEAD</span>
               <span
                 class="transition-colors duration-300"
-                :class="phase === 'tail' || phase === 'done' ? 'text-accent-blue' : 'text-zinc-700'"
+                :class="phase === 'tail' || phase === 'done' ? 'text-primary' : 'text-dimmed'"
               >TAIL</span>
             </div>
           </div>
@@ -210,49 +210,49 @@ function getLevelColor(level: string): string {
               :class="{
                 'border-transparent': getLogState(log) === 'normal',
                 'border-emerald-500/40': getLogState(log) === 'kept',
-                'border-zinc-800 opacity-25': getLogState(log) === 'dropped',
-                'border-accent-blue/60 bg-accent-blue/[0.03]': getLogState(log) === 'rescued',
+                'border-muted opacity-25': getLogState(log) === 'dropped',
+                'border-primary/60 bg-primary/[0.03]': getLogState(log) === 'rescued',
               }"
             >
               <span
                 class="w-10 shrink-0 font-medium transition-colors duration-500"
-                :class="getLogState(log) === 'dropped' ? 'text-zinc-700' : getLevelColor(log.level)"
+                :class="getLogState(log) === 'dropped' ? 'text-dimmed' : getLevelColor(log.level)"
               >{{ log.level }}</span>
               <span
                 class="hidden sm:inline w-8 shrink-0 transition-colors duration-500"
-                :class="getLogState(log) === 'dropped' ? 'text-zinc-700' : 'text-violet-400'"
+                :class="getLogState(log) === 'dropped' ? 'text-dimmed' : 'text-violet-400'"
               >{{ log.method }}</span>
               <span
                 class="truncate transition-colors duration-500"
-                :class="getLogState(log) === 'dropped' ? 'text-zinc-700' : 'text-zinc-400'"
+                :class="getLogState(log) === 'dropped' ? 'text-dimmed' : 'text-muted'"
               >{{ log.path }}</span>
               <span
                 class="ml-auto shrink-0 tabular-nums transition-colors duration-500"
                 :class="{
-                  'text-zinc-800': getLogState(log) === 'dropped',
+                  'text-muted': getLogState(log) === 'dropped',
                   'text-amber-500': getLogState(log) !== 'dropped' && log.duration >= 1000,
-                  'text-zinc-600': getLogState(log) !== 'dropped' && log.duration < 1000,
+                  'text-dimmed': getLogState(log) !== 'dropped' && log.duration < 1000,
                 }"
               >{{ log.duration }}ms</span>
               <span
                 class="w-3 text-center shrink-0 transition-opacity duration-500"
                 :class="phase === 'idle' ? 'opacity-0' : 'opacity-100'"
               >
-                <span v-if="getLogState(log) === 'dropped'" class="text-zinc-700">&times;</span>
-                <span v-else-if="getLogState(log) === 'rescued'" class="text-accent-blue">&uarr;</span>
+                <span v-if="getLogState(log) === 'dropped'" class="text-dimmed">&times;</span>
+                <span v-else-if="getLogState(log) === 'rescued'" class="text-primary">&uarr;</span>
                 <span v-else-if="getLogState(log) === 'kept'" class="text-emerald-500">&#10003;</span>
               </span>
             </div>
           </div>
 
           <div
-            class="border-t border-zinc-800 px-4 py-3 transition-opacity duration-500"
+            class="border-t border-muted px-4 py-3 transition-opacity duration-500"
             :class="phase === 'done' ? 'opacity-100' : 'opacity-0'"
           >
-            <p class="font-mono text-[10px] text-zinc-500">
+            <p class="font-mono text-[10px] text-dimmed">
               <span class="text-emerald-500">5 kept</span>
               <span class="mx-1.5">&middot;</span>
-              <span class="text-zinc-600">3 dropped</span>
+              <span class="text-dimmed">3 dropped</span>
               <span class="mx-1.5">&middot;</span>
               noise reduced without data loss
             </p>

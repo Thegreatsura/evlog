@@ -24,21 +24,21 @@ interface Benchmark {
 
 const benchmarks: Benchmark[][] = [
   [
-    { lib: 'evlog', ops: 1750000, color: 'accent-blue' },
+    { lib: 'evlog', ops: 1750000, color: 'primary' },
     { lib: 'consola', ops: 1040000, color: 'amber-500' },
     { lib: 'pino', ops: 508000, color: 'emerald-500' },
-    { lib: 'winston', ops: 202500, color: 'zinc-500' },
+    { lib: 'winston', ops: 202500, color: 'muted' },
   ],
   [
-    { lib: 'evlog', ops: 1850000, color: 'accent-blue' },
+    { lib: 'evlog', ops: 1850000, color: 'primary' },
     { lib: 'pino', ops: 871000, color: 'emerald-500' },
-    { lib: 'winston', ops: 568500, color: 'zinc-500' },
+    { lib: 'winston', ops: 568500, color: 'muted' },
     { lib: 'consola', ops: 272200, color: 'amber-500' },
   ],
   [
-    { lib: 'evlog', ops: 20520000, color: 'accent-blue' },
+    { lib: 'evlog', ops: 20520000, color: 'primary' },
     { lib: 'pino', ops: 7360000, color: 'emerald-500' },
-    { lib: 'winston', ops: 5430000, color: 'zinc-500' },
+    { lib: 'winston', ops: 5430000, color: 'muted' },
     { lib: 'consola', ops: 299300, color: 'amber-500' },
   ],
 ]
@@ -108,20 +108,20 @@ onBeforeUnmount(() => {
             <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </div>
         </div>
-        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-zinc-400">
+        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-muted">
           <slot name="description" mdc-unwrap="p" />
         </p>
         <div class="mt-5 flex flex-wrap gap-2">
           <span
             v-for="pill in pills"
             :key="pill.label"
-            class="inline-flex items-center gap-1.5 border border-zinc-800 bg-zinc-900/50 px-3 py-1 font-mono text-[11px] text-zinc-400"
+            class="inline-flex items-center gap-1.5 border border-muted bg-elevated/50 px-3 py-1 font-mono text-[11px] text-muted"
           >
-            <UIcon :name="pill.icon" class="size-3 text-accent-blue" />
+            <UIcon :name="pill.icon" class="size-3 text-primary" />
             {{ pill.label }}
           </span>
         </div>
-        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
           {{ props.linkLabel || 'Learn more' }}
           <UIcon name="i-lucide-arrow-right" class="size-3" />
         </NuxtLink>
@@ -135,22 +135,22 @@ onBeforeUnmount(() => {
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
-        <div ref="panelRef" class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e] flex flex-col">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div ref="panelRef" class="h-full overflow-hidden border border-muted bg-default flex flex-col">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">benchmark</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">benchmark</span>
             <div class="ml-auto flex items-center gap-1">
               <button
                 v-for="(label, idx) in benchLabels"
                 :key="label"
                 class="font-mono text-[10px] px-2 py-0.5 border transition-all duration-300 outline-none cursor-pointer"
                 :class="activeBench === idx
-                  ? 'border-accent-blue/30 bg-accent-blue/10 text-accent-blue'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'"
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-transparent text-dimmed hover:text-muted'"
                 @click="activeBench = idx"
               >
                 {{ label }}
@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
               >
                 <span
                   class="w-14 shrink-0 font-mono text-xs text-right"
-                  :class="entry.lib === 'evlog' ? 'text-white font-medium' : 'text-zinc-500'"
+                  :class="entry.lib === 'evlog' ? 'text-white font-medium' : 'text-dimmed'"
                 >
                   {{ entry.lib }}
                 </span>
@@ -190,10 +190,10 @@ onBeforeUnmount(() => {
                     <div
                       class="size-full"
                       :class="{
-                        'bg-accent-blue': entry.color === 'accent-blue',
+                        'bg-primary': entry.color === 'primary',
                         'bg-amber-500/60': entry.color === 'amber-500',
                         'bg-emerald-500/60': entry.color === 'emerald-500',
-                        'bg-zinc-600/60': entry.color === 'zinc-500',
+                        'bg-muted/60': entry.color === 'muted',
                       }"
                     />
                   </div>
@@ -207,38 +207,38 @@ onBeforeUnmount(() => {
                   ]"
                   :style="{ transitionDelay: prefersReducedMotion ? '0ms' : `${400 + eIdx * 150}ms` }"
                 >
-                  <span :class="entry.lib === 'evlog' ? 'text-accent-blue font-medium' : 'text-zinc-600'">
+                  <span :class="entry.lib === 'evlog' ? 'text-primary font-medium' : 'text-dimmed'">
                     {{ formatOps(entry.ops) }}
                   </span>
                   <span
                     v-if="entry.lib !== 'evlog'"
-                    class="text-[10px] text-zinc-700"
+                    class="text-[10px] text-dimmed"
                   >
                     {{ speedLabel(bench, entry) }}
                   </span>
                 </span>
               </div>
 
-              <div class="mt-3 pt-3 border-t border-zinc-800/50">
-                <p class="font-mono text-[10px] text-zinc-600">
+              <div class="mt-3 pt-3 border-t border-muted/50">
+                <p class="font-mono text-[10px] text-dimmed">
                   ops/sec · higher is better · silent mode (no I/O)
                 </p>
               </div>
             </div>
           </div>
 
-          <div class="border-t border-zinc-800/50 px-5 sm:px-6 py-4">
+          <div class="border-t border-muted/50 px-5 sm:px-6 py-4">
             <div class="flex items-center font-mono text-[11px]">
               <span class="text-white font-medium tabular-nums">0</span>
-              <span class="text-zinc-600 ml-1">deps</span>
-              <span class="text-zinc-800 mx-3">/</span>
+              <span class="text-dimmed ml-1">deps</span>
+              <span class="text-muted mx-3">/</span>
               <span class="text-white font-medium tabular-nums">5.2 kB</span>
-              <span class="text-zinc-600 ml-1">gzip</span>
-              <span class="text-zinc-800 mx-3">/</span>
+              <span class="text-dimmed ml-1">gzip</span>
+              <span class="text-muted mx-3">/</span>
               <span class="text-white font-medium tabular-nums">12</span>
-              <span class="text-zinc-600 ml-1">frameworks</span>
-              <span class="text-zinc-800 mx-3">/</span>
-              <span class="text-zinc-600">tree-shakeable</span>
+              <span class="text-dimmed ml-1">frameworks</span>
+              <span class="text-muted mx-3">/</span>
+              <span class="text-dimmed">tree-shakeable</span>
             </div>
           </div>
         </div>
@@ -250,103 +250,103 @@ onBeforeUnmount(() => {
         :transition="{ duration: 0.5, delay: 0.2 }"
         :in-view-options="{ once: true }"
       >
-        <div class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e] flex flex-col">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div class="h-full overflow-hidden border border-muted bg-default flex flex-col">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">why it's fast</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">why it's fast</span>
           </div>
 
           <div class="p-5 sm:p-6 space-y-5 flex-1">
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-accent-blue/20 bg-accent-blue/5">
-                <UIcon name="i-lucide-merge" class="size-3.5 text-accent-blue" />
+              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-primary/20 bg-primary/5">
+                <UIcon name="i-lucide-merge" class="size-3.5 text-primary" />
               </div>
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   1 event, not N log lines
                 </p>
-                <p class="mt-0.5 text-[11px] leading-relaxed text-zinc-600">
+                <p class="mt-0.5 text-[11px] leading-relaxed text-dimmed">
                   Accumulate context, emit once. 75% less data downstream.
                 </p>
               </div>
             </div>
 
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-accent-blue/20 bg-accent-blue/5">
-                <UIcon name="i-lucide-pen-tool" class="size-3.5 text-accent-blue" />
+              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-primary/20 bg-primary/5">
+                <UIcon name="i-lucide-pen-tool" class="size-3.5 text-primary" />
               </div>
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   In-place mutations
                 </p>
-                <p class="mt-0.5 text-[11px] leading-relaxed text-zinc-600">
+                <p class="mt-0.5 text-[11px] leading-relaxed text-dimmed">
                   No object spreads, no copies. Direct recursive merge.
                 </p>
               </div>
             </div>
 
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-accent-blue/20 bg-accent-blue/5">
-                <UIcon name="i-lucide-clock" class="size-3.5 text-accent-blue" />
+              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-primary/20 bg-primary/5">
+                <UIcon name="i-lucide-clock" class="size-3.5 text-primary" />
               </div>
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   Lazy allocation
                 </p>
-                <p class="mt-0.5 text-[11px] leading-relaxed text-zinc-600">
+                <p class="mt-0.5 text-[11px] leading-relaxed text-dimmed">
                   Timestamps, sampling context — created only when needed.
                 </p>
               </div>
             </div>
 
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-accent-blue/20 bg-accent-blue/5">
-                <UIcon name="i-lucide-file-code" class="size-3.5 text-accent-blue" />
+              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-primary/20 bg-primary/5">
+                <UIcon name="i-lucide-file-code" class="size-3.5 text-primary" />
               </div>
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   No serialization until drain
                 </p>
-                <p class="mt-0.5 text-[11px] leading-relaxed text-zinc-600">
+                <p class="mt-0.5 text-[11px] leading-relaxed text-dimmed">
                   Plain objects throughout. JSON.stringify runs once at the end.
                 </p>
               </div>
             </div>
 
             <div class="flex items-start gap-3">
-              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-accent-blue/20 bg-accent-blue/5">
-                <UIcon name="i-lucide-box" class="size-3.5 text-accent-blue" />
+              <div class="mt-0.5 flex size-6 shrink-0 items-center justify-center border border-primary/20 bg-primary/5">
+                <UIcon name="i-lucide-box" class="size-3.5 text-primary" />
               </div>
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   Zero dependencies
                 </p>
-                <p class="mt-0.5 text-[11px] leading-relaxed text-zinc-600">
+                <p class="mt-0.5 text-[11px] leading-relaxed text-dimmed">
                   No transitive deps. Nothing to audit, nothing to break.
                 </p>
               </div>
             </div>
           </div>
 
-          <div class="border-t border-zinc-800/50 px-5 sm:px-6 py-4">
+          <div class="border-t border-muted/50 px-5 sm:px-6 py-4">
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   Total overhead per request
                 </p>
-                <p class="font-mono text-[10px] text-zinc-600 mt-0.5">
+                <p class="font-mono text-[10px] text-dimmed mt-0.5">
                   create + 3x set + emit + sampling + enrichers
                 </p>
               </div>
               <div class="text-right">
-                <p class="font-mono text-xl font-medium text-accent-blue tabular-nums">
+                <p class="font-mono text-xl font-medium text-primary tabular-nums">
                   ~3µs
                 </p>
-                <p class="font-mono text-[10px] text-zinc-600">
+                <p class="font-mono text-[10px] text-dimmed">
                   0.003ms
                 </p>
               </div>
@@ -360,6 +360,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .perf-bar-glow {
-  filter: drop-shadow(0 0 6px rgba(40, 83, 255, 0.3));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-blue-500) 30%, transparent));
 }
 </style>

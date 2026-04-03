@@ -53,7 +53,7 @@ const wideEventFields = [
   { key: 'why', value: '"Flag \'new-pricing-engine\' returns pricing.amount instead of price"', branch: '├', color: 'text-amber-400/80' },
   { key: 'fix', value: '"Disable flag or update OrderService to use pricing.amount"', branch: '├', color: 'text-emerald-400/80' },
   { key: 'user', value: '{ id: "user_2kF9", plan: "pro" }', branch: '├', color: 'text-sky-400/80' },
-  { key: 'requestId', value: '"req_4kT8mPqZ"', branch: '└', color: 'text-zinc-500' },
+  { key: 'requestId', value: '"req_4kT8mPqZ"', branch: '└', color: 'text-dimmed' },
 ]
 
 function ts() {
@@ -117,7 +117,7 @@ onUnmounted(() => {
 
 const levelColors: Record<string, string> = {
   info: 'text-emerald-400',
-  debug: 'text-zinc-600',
+  debug: 'text-dimmed',
   warn: 'text-amber-400',
   error: 'text-red-400',
 }
@@ -130,14 +130,14 @@ const levelColors: Record<string, string> = {
       <!-- Left sources with connector lines -->
       <div class="hidden lg:flex flex-col items-end gap-10">
         <div v-for="(src, idx) in sourcesLeft" :key="src.label" class="flex items-center gap-0">
-          <div class="flex items-center gap-2 px-3 py-2.5 bg-dark-surface border border-dark-border font-mono text-[10px] shrink-0">
-            <UIcon :name="src.icon" class="size-3.5 shrink-0 text-zinc-500" />
+          <div class="flex items-center gap-2 px-3 py-2.5 bg-default border border-muted font-mono text-[10px] shrink-0">
+            <UIcon :name="src.icon" class="size-3.5 shrink-0 text-dimmed" />
             <div class="flex flex-col">
-              <span class="font-medium text-[11px] text-zinc-300">{{ src.label }}</span>
-              <span class="text-[9px] text-zinc-700">{{ src.sublabel }}</span>
+              <span class="font-medium text-[11px] text-highlighted">{{ src.label }}</span>
+              <span class="text-[9px] text-dimmed">{{ src.sublabel }}</span>
             </div>
           </div>
-          <div class="w-5 h-px bg-dark-border relative overflow-hidden">
+          <div class="w-5 h-px bg-muted relative overflow-hidden">
             <div class="pulse-inward-right h-full" :style="{ animationDelay: `${idx * 0.5}s` }" />
           </div>
         </div>
@@ -145,15 +145,15 @@ const levelColors: Record<string, string> = {
 
       <!-- Terminal -->
       <div class="mask-b-from-90%">
-        <div class="terminal-container overflow-hidden bg-[#06060a] shadow-2xl shadow-black/60">
-          <div class="flex items-center border-b border-zinc-800/30 px-5 py-3">
+        <div class="terminal-container overflow-hidden bg-default shadow-2xl shadow-black/60">
+          <div class="flex items-center border-b border-muted/30 px-5 py-3">
             <div class="flex gap-1.5">
-              <div class="size-2.5 rounded-full bg-zinc-800 border border-zinc-700/40" />
-              <div class="size-2.5 rounded-full bg-zinc-800 border border-zinc-700/40" />
-              <div class="size-2.5 rounded-full bg-zinc-800 border border-zinc-700/40" />
+              <div class="size-2.5 rounded-full bg-muted border border-accented/40" />
+              <div class="size-2.5 rounded-full bg-muted border border-accented/40" />
+              <div class="size-2.5 rounded-full bg-muted border border-accented/40" />
             </div>
             <div class="flex-1 flex justify-center">
-              <span class="font-mono text-[10px] tracking-wider uppercase transition-colors duration-500" :class="phase === 'resolved' ? 'text-emerald-500/60' : 'text-zinc-600'">
+              <span class="font-mono text-[10px] tracking-wider uppercase transition-colors duration-500" :class="phase === 'resolved' ? 'text-emerald-500/60' : 'text-dimmed'">
                 {{ phase === 'resolved' ? 'wide event' : phase === 'resolving' ? 'aggregating...' : 'request logs' }}
               </span>
             </div>
@@ -163,18 +163,18 @@ const levelColors: Record<string, string> = {
                 :class="{
                   'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]': phase === 'resolved',
                   'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.4)] animate-pulse': phase === 'resolving',
-                  'bg-zinc-600': phase === 'chaos',
+                  'bg-accented': phase === 'chaos',
                 }"
               />
-              <span class="font-mono text-[9px] text-zinc-700 uppercase tracking-wider hidden sm:inline">
+              <span class="font-mono text-[9px] text-dimmed uppercase tracking-wider hidden sm:inline">
                 {{ phase === 'resolved' ? 'structured' : phase === 'resolving' ? 'processing' : 'live' }}
               </span>
             </div>
           </div>
 
           <div class="relative h-[340px] md:h-[390px]">
-            <div class="absolute inset-x-0 top-0 h-6 bg-linear-to-b from-[#06060a] to-transparent z-10 pointer-events-none" />
-            <div class="absolute inset-x-0 bottom-0 h-6 bg-linear-to-t from-[#06060a] to-transparent z-10 pointer-events-none" />
+            <div class="absolute inset-x-0 top-0 h-6 bg-linear-to-b from-default to-transparent z-10 pointer-events-none" />
+            <div class="absolute inset-x-0 bottom-0 h-6 bg-linear-to-t from-default to-transparent z-10 pointer-events-none" />
             <div class="absolute inset-0 terminal-dots pointer-events-none" />
 
             <!-- Chaos Logs -->
@@ -197,16 +197,16 @@ const levelColors: Record<string, string> = {
                   }"
                   :style="{ opacity: phase === 'resolving' ? 0.12 : 1 }"
                 >
-                  <span class="shrink-0 w-7 text-right tabular-nums text-zinc-800 select-none mr-4 text-[10px]">{{ log.line }}</span>
-                  <span class="shrink-0 tabular-nums text-zinc-700 select-none mr-3">{{ log.ts }}</span>
+                  <span class="shrink-0 w-7 text-right tabular-nums text-muted select-none mr-4 text-[10px]">{{ log.line }}</span>
+                  <span class="shrink-0 tabular-nums text-dimmed select-none mr-3">{{ log.ts }}</span>
                   <span class="shrink-0 w-12 uppercase font-medium mr-3" :class="levelColors[log.level]">{{ log.level }}</span>
-                  <span class="truncate" :class="log.level === 'error' ? 'text-red-300/80' : 'text-zinc-400'">{{ log.msg }}</span>
+                  <span class="truncate" :class="log.level === 'error' ? 'text-red-300/80' : 'text-muted'">{{ log.msg }}</span>
                 </div>
               </TransitionGroup>
 
               <div v-if="phase === 'chaos'" class="flex items-center gap-0 py-[3px] mt-0.5">
                 <span class="w-7 mr-4" />
-                <span class="text-accent-blue/50 animate-pulse font-mono">▍</span>
+                <span class="text-primary/50 animate-pulse font-mono">▍</span>
               </div>
 
               <Transition
@@ -222,7 +222,7 @@ const levelColors: Record<string, string> = {
                   class="absolute inset-0 flex items-center justify-center z-20"
                 >
                   <button
-                    class="group relative px-6 py-3 bg-accent-blue hover:bg-blue-500 text-white text-xs font-medium transition-all duration-200 active:scale-95 shadow-[0_0_24px_rgba(40,83,255,0.25)] hover:shadow-[0_0_40px_rgba(40,83,255,0.4)] rounded-xs"
+                    class="group relative px-6 py-3 bg-primary hover:bg-blue-600 text-white text-xs font-medium transition-all duration-200 active:scale-95 shadow-[0_0_24px_color-mix(in_srgb,var(--color-blue-500)_25%,transparent)] hover:shadow-[0_0_40px_color-mix(in_srgb,var(--color-blue-500)_40%,transparent)] rounded-xs"
                     @click="resolve"
                   >
                     <span class="flex items-center gap-2.5">
@@ -240,10 +240,10 @@ const levelColors: Record<string, string> = {
               >
                 <div
                   v-if="phase === 'resolving'"
-                  class="absolute inset-0 flex items-center justify-center bg-[#06060a]/60 backdrop-blur-xs z-20"
+                  class="absolute inset-0 flex items-center justify-center bg-default/60 backdrop-blur-xs z-20"
                 >
-                  <div class="flex items-center gap-2.5 font-mono text-[11px] text-accent-blue/80">
-                    <span class="size-3.5 border-1.5 border-accent-blue/30 border-t-accent-blue rounded-full animate-spin" />
+                  <div class="flex items-center gap-2.5 font-mono text-[11px] text-primary/80">
+                    <span class="size-3.5 border-1.5 border-primary/30 border-t-primary rounded-full animate-spin" />
                     <span>Aggregating into one wide event...</span>
                   </div>
                 </div>
@@ -260,14 +260,14 @@ const levelColors: Record<string, string> = {
                 v-if="phase === 'resolved'"
                 class="absolute inset-0 px-5 py-5 md:px-6 md:py-6 font-mono text-xs md:text-sm"
               >
-                <div class="flex items-center gap-3 pb-4 mb-5 border-b border-zinc-800/30">
+                <div class="flex items-center gap-3 pb-4 mb-5 border-b border-muted/30">
                   <span class="px-1.5 py-0.5 text-[9px] font-bold bg-red-500/10 text-red-400 border border-red-500/15 uppercase tracking-widest rounded-xs">error</span>
                   <span class="text-violet-400 font-medium">POST</span>
                   <span class="text-amber-300/80">/api/orders</span>
-                  <span class="ml-auto flex items-center gap-2.5 text-zinc-500 text-xs">
+                  <span class="ml-auto flex items-center gap-2.5 text-dimmed text-xs">
                     <span class="text-red-400 font-medium">500</span>
-                    <span class="text-zinc-800">|</span>
-                    <span class="text-zinc-600">23ms</span>
+                    <span class="text-muted">|</span>
+                    <span class="text-dimmed">23ms</span>
                   </span>
                 </div>
 
@@ -278,14 +278,14 @@ const levelColors: Record<string, string> = {
                     class="flex items-baseline gap-0 transition-all duration-300 ease-out"
                     :class="idx < visibleFields ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'"
                   >
-                    <span class="text-zinc-700 mr-2 font-light select-none">{{ field.branch }}─</span>
-                    <span class="text-zinc-500 shrink-0 mr-1.5">{{ field.key }}</span>
-                    <span class="text-zinc-800 mr-1.5">:</span>
+                    <span class="text-dimmed mr-2 font-light select-none">{{ field.branch }}─</span>
+                    <span class="text-dimmed shrink-0 mr-1.5">{{ field.key }}</span>
+                    <span class="text-muted mr-1.5">:</span>
                     <span :class="field.color" class="truncate">{{ field.value }}</span>
                   </div>
                 </div>
 
-                <div class="absolute bottom-5 left-5 right-5 md:left-6 md:right-6 flex items-center gap-5 pt-3 border-t border-zinc-800/20 text-[10px] text-zinc-600 font-mono">
+                <div class="absolute bottom-5 left-5 right-5 md:left-6 md:right-6 flex items-center gap-5 pt-3 border-t border-muted/20 text-[10px] text-dimmed font-mono">
                   <span class="flex items-center gap-1.5">
                     <span class="text-emerald-500">&#10003;</span>
                     Root cause identified
@@ -295,7 +295,7 @@ const levelColors: Record<string, string> = {
                     Fix provided
                   </span>
                   <button
-                    class="ml-auto text-zinc-700 hover:text-zinc-400 transition-colors flex items-center gap-1"
+                    class="ml-auto text-dimmed hover:text-muted transition-colors flex items-center gap-1"
                     @click="reset"
                   >
                     <UIcon name="i-lucide-rotate-ccw" class="size-2.5" />
@@ -311,14 +311,14 @@ const levelColors: Record<string, string> = {
       <!-- Right sources with connector lines -->
       <div class="hidden lg:flex flex-col items-start gap-10">
         <div v-for="(src, idx) in sourcesRight" :key="src.label" class="flex items-center gap-0">
-          <div class="w-5 h-px bg-dark-border relative overflow-hidden">
+          <div class="w-5 h-px bg-muted relative overflow-hidden">
             <div class="pulse-inward-left h-full" :style="{ animationDelay: `${idx * 0.5 + 0.3}s` }" />
           </div>
-          <div class="flex items-center gap-2 px-3 py-2.5 bg-dark-surface border border-dark-border font-mono text-[10px] shrink-0">
-            <UIcon :name="src.icon" class="size-3.5 shrink-0 text-zinc-500" />
+          <div class="flex items-center gap-2 px-3 py-2.5 bg-default border border-muted font-mono text-[10px] shrink-0">
+            <UIcon :name="src.icon" class="size-3.5 shrink-0 text-dimmed" />
             <div class="flex flex-col">
-              <span class="font-medium text-[11px] text-zinc-300">{{ src.label }}</span>
-              <span class="text-[9px] text-zinc-700">{{ src.sublabel }}</span>
+              <span class="font-medium text-[11px] text-highlighted">{{ src.label }}</span>
+              <span class="text-[9px] text-dimmed">{{ src.sublabel }}</span>
             </div>
           </div>
         </div>
@@ -337,7 +337,7 @@ const levelColors: Record<string, string> = {
           class="px-3 py-1.5 border font-mono text-[10px] transition-all duration-500"
           :class="phase === 'resolved'
             ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400/90'
-            : 'bg-dark-surface border-dark-border text-zinc-500'"
+            : 'bg-default border-muted text-dimmed'"
         >
           <span :class="phase === 'resolved' ? 'text-emerald-500' : 'text-red-400/60'" class="mr-1.5">{{ phase === 'resolved' ? '✓' : '?' }}</span>
           {{ phase === 'resolved' ? q.answer : q.text }}
@@ -359,18 +359,18 @@ const levelColors: Record<string, string> = {
 }
 
 .pulse-inward-right {
-  background: linear-gradient(90deg, transparent 0%, rgba(40, 83, 255, 0.5) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--color-blue-500) 50%, transparent) 50%, transparent 100%);
   animation: slide-right 1.8s linear infinite;
 }
 
 .pulse-inward-left {
-  background: linear-gradient(90deg, transparent 0%, rgba(40, 83, 255, 0.5) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--color-blue-500) 50%, transparent) 50%, transparent 100%);
   animation: slide-left 1.8s linear infinite;
 }
 
 .terminal-container {
   border: 1px solid transparent;
-  background-image: linear-gradient(#06060a, #06060a), linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.0) 100%);
+  background-image: linear-gradient(var(--ui-bg), var(--ui-bg)), linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.0) 100%);
   background-origin: border-box;
   background-clip: padding-box, border-box;
 }
@@ -381,7 +381,7 @@ const levelColors: Record<string, string> = {
 }
 
 .latest-line {
-  background: linear-gradient(90deg, rgba(40, 83, 255, 0.04) 0%, transparent 70%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-blue-500) 4%, transparent) 0%, transparent 70%);
 }
 
 .error-line {

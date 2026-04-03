@@ -91,20 +91,20 @@ function setView(view: 'without' | 'with') {
                 <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
               </div>
             </div>
-            <p v-if="$slots.description" class="max-w-md text-sm leading-relaxed text-zinc-400">
+            <p v-if="$slots.description" class="max-w-md text-sm leading-relaxed text-muted">
               <slot name="description" mdc-unwrap="p" />
             </p>
             <div class="mt-5 flex flex-wrap gap-2">
               <span
                 v-for="pill in pills"
                 :key="pill.label"
-                class="inline-flex items-center gap-1.5 border border-zinc-800 bg-zinc-900/50 px-3 py-1 font-mono text-[11px] text-zinc-400"
+                class="inline-flex items-center gap-1.5 border border-muted bg-elevated/50 px-3 py-1 font-mono text-[11px] text-muted"
               >
                 <UIcon :name="pill.icon" class="size-3 text-sky-500" />
                 {{ pill.label }}
               </span>
             </div>
-            <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+            <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
               {{ props.linkLabel || 'Learn more' }}
               <UIcon name="i-lucide-arrow-right" class="size-3" />
             </NuxtLink>
@@ -125,10 +125,10 @@ function setView(view: 'without' | 'with') {
             >
               <UIcon :name="benefit.icon" class="size-4 mt-0.5 shrink-0 text-sky-500" />
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   {{ benefit.title }}
                 </p>
-                <p class="mt-0.5 text-xs leading-relaxed text-zinc-500">
+                <p class="mt-0.5 text-xs leading-relaxed text-dimmed">
                   {{ benefit.text }}
                 </p>
               </div>
@@ -143,20 +143,20 @@ function setView(view: 'without' | 'with') {
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
-        <div ref="panelRef" class="overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div ref="panelRef" class="overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">wide event</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">wide event</span>
             <div class="ml-auto flex items-center gap-1.5">
               <button
                 class="font-mono text-[10px] px-2 py-0.5 border transition-all duration-300 outline-none cursor-pointer"
                 :class="activeView === 'without'
-                  ? 'border-zinc-600/30 bg-zinc-600/10 text-zinc-400'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'"
+                  ? 'border-accented/30 bg-accented/10 text-muted'
+                  : 'border-transparent text-dimmed hover:text-muted'"
                 @click="setView('without')"
               >
                 before
@@ -165,7 +165,7 @@ function setView(view: 'without' | 'with') {
                 class="font-mono text-[10px] px-2 py-0.5 border transition-all duration-300 outline-none cursor-pointer"
                 :class="activeView === 'with'
                   ? 'border-sky-500/30 bg-sky-500/10 text-sky-500'
-                  : 'border-transparent text-zinc-600 hover:text-zinc-400'"
+                  : 'border-transparent text-dimmed hover:text-muted'"
                 @click="setView('with')"
               >
                 + evlog/ai
@@ -173,7 +173,7 @@ function setView(view: 'without' | 'with') {
             </div>
           </div>
 
-          <div class="px-5 pt-4 pb-3 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto border-b border-zinc-800/50">
+          <div class="px-5 pt-4 pb-3 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto border-b border-muted/50">
             <!-- eslint-disable vue/multiline-html-element-content-newline -->
             <pre><code><span class="text-violet-400">const</span> ai = <span class="text-amber-400">createAILogger</span>(log)
 
@@ -193,19 +193,19 @@ function setView(view: 'without' | 'with') {
                 <span class="font-medium text-emerald-500">INFO</span>
                 <span class="text-violet-400">POST</span>
                 <span class="text-amber-400">/api/chat</span>
-                <span class="ml-auto text-zinc-600">(4.5s)</span>
+                <span class="ml-auto text-dimmed">(4.5s)</span>
               </div>
-              <div class="space-y-1 border-l-2 border-zinc-800 pl-4">
+              <div class="space-y-1 border-l-2 border-muted pl-4">
                 <div>
-                  <span class="text-sky-400">status</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">status</span><span class="text-dimmed">:</span>
                   <span class="text-emerald-400"> 200</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">requestId</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-500"> "req_8f2k..."</span>
+                  <span class="text-sky-400">requestId</span><span class="text-dimmed">:</span>
+                  <span class="text-dimmed"> "req_8f2k..."</span>
                 </div>
               </div>
-              <div class="mt-4 text-xs text-zinc-600 italic">
+              <div class="mt-4 text-xs text-dimmed italic">
                 Which model? How many tokens? What did it cost?
               </div>
             </div>
@@ -218,45 +218,45 @@ function setView(view: 'without' | 'with') {
                 <span class="font-medium text-emerald-500">INFO</span>
                 <span class="text-violet-400">POST</span>
                 <span class="text-amber-400">/api/chat</span>
-                <span class="ml-auto text-zinc-600">(4.5s)</span>
+                <span class="ml-auto text-dimmed">(4.5s)</span>
               </div>
-              <div class="space-y-1 border-l-2 border-zinc-800 pl-4 mb-1">
+              <div class="space-y-1 border-l-2 border-muted pl-4 mb-1">
                 <div>
-                  <span class="text-sky-400">status</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">status</span><span class="text-dimmed">:</span>
                   <span class="text-emerald-400"> 200</span>
                 </div>
               </div>
               <div class="space-y-1 border-l-2 border-sky-500/20 pl-4">
                 <div>
-                  <span class="text-sky-400">ai.model</span><span class="text-zinc-600">:</span>
-                  <span class="text-zinc-400"> "claude-sonnet-4.6"</span>
+                  <span class="text-sky-400">ai.model</span><span class="text-dimmed">:</span>
+                  <span class="text-muted"> "claude-sonnet-4.6"</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.inputTokens</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.inputTokens</span><span class="text-dimmed">:</span>
                   <span class="text-pink-400"> 3312</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.outputTokens</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.outputTokens</span><span class="text-dimmed">:</span>
                   <span class="text-pink-400"> 814</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.reasoningTokens</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.reasoningTokens</span><span class="text-dimmed">:</span>
                   <span class="text-pink-400"> 225</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.toolCalls</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.toolCalls</span><span class="text-dimmed">:</span>
                   <span class="text-amber-400"> ["searchWeb", "queryDB"]</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.steps</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.steps</span><span class="text-dimmed">:</span>
                   <span class="text-pink-400"> 3</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.msToFirstChunk</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.msToFirstChunk</span><span class="text-dimmed">:</span>
                   <span class="text-emerald-400"> 234</span>
                 </div>
                 <div>
-                  <span class="text-sky-400">ai.tokensPerSecond</span><span class="text-zinc-600">:</span>
+                  <span class="text-sky-400">ai.tokensPerSecond</span><span class="text-dimmed">:</span>
                   <span class="text-emerald-400"> 180</span>
                 </div>
               </div>

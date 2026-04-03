@@ -104,20 +104,20 @@ function startAnimation() {
             <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
           </div>
         </div>
-        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-zinc-400">
+        <p v-if="$slots.description" class="max-w-lg text-sm leading-relaxed text-muted">
           <slot name="description" mdc-unwrap="p" />
         </p>
         <div class="mt-5 flex flex-wrap gap-2">
           <span
             v-for="pill in pills"
             :key="pill.label"
-            class="inline-flex items-center gap-1.5 border border-zinc-800 bg-zinc-900/50 px-3 py-1 font-mono text-[11px] text-zinc-400"
+            class="inline-flex items-center gap-1.5 border border-muted bg-elevated/50 px-3 py-1 font-mono text-[11px] text-muted"
           >
             <UIcon :name="pill.icon" class="size-3 text-violet-500" />
             {{ pill.label }}
           </span>
         </div>
-        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+        <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
           {{ props.linkLabel || 'Learn more' }}
           <UIcon name="i-lucide-arrow-right" class="size-3" />
         </NuxtLink>
@@ -132,14 +132,14 @@ function startAnimation() {
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
-        <div class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div class="h-full overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">output</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">output</span>
             <span class="ml-auto font-mono text-xs text-red-500">ERROR</span>
           </div>
           <div class="p-5 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto">
@@ -154,36 +154,36 @@ function startAnimation() {
                 class="border-l-2 py-0.5 pl-4 transition-all duration-300"
                 :class="activeField === 'why' ? 'border-l-violet-500/60 bg-violet-500/[0.06]' : 'border-l-red-500/30'"
               >
-                <span class="text-sky-400">message</span><span class="text-zinc-600">:</span>
-                <span class="text-zinc-400"> "Payment processing failed"</span>
+                <span class="text-sky-400">message</span><span class="text-dimmed">:</span>
+                <span class="text-muted"> "Payment processing failed"</span>
               </div>
               <div
                 class="border-l-2 py-0.5 pl-4 transition-all duration-300"
                 :class="activeField === 'why' ? 'border-l-violet-500/60 bg-violet-500/[0.06]' : 'border-l-red-500/30'"
               >
-                <span class="text-sky-400">why</span><span class="text-zinc-600">:</span>
-                <span class="text-zinc-400"> "Card issuer declined: insufficient funds"</span>
+                <span class="text-sky-400">why</span><span class="text-dimmed">:</span>
+                <span class="text-muted"> "Card issuer declined: insufficient funds"</span>
               </div>
               <div
                 class="border-l-2 py-0.5 pl-4 transition-all duration-300"
                 :class="activeField === 'fix' ? 'border-l-violet-500/60 bg-violet-500/[0.06]' : 'border-l-red-500/30'"
               >
-                <span class="text-sky-400">fix</span><span class="text-zinc-600">:</span>
+                <span class="text-sky-400">fix</span><span class="text-dimmed">:</span>
                 <span class="text-emerald-400"> "Retry with a different payment method"</span>
               </div>
               <div
                 class="border-l-2 py-0.5 pl-4 transition-all duration-300"
                 :class="activeField === 'user' ? 'border-l-violet-500/60 bg-violet-500/[0.06]' : 'border-l-red-500/30'"
               >
-                <span class="text-sky-400">user</span><span class="text-zinc-600">:</span>
-                <span class="text-zinc-400"> { id: 1842, plan: "pro" }</span>
+                <span class="text-sky-400">user</span><span class="text-dimmed">:</span>
+                <span class="text-muted"> { id: 1842, plan: "pro" }</span>
               </div>
               <div
                 class="border-l-2 py-0.5 pl-4 transition-all duration-300"
                 :class="activeField === 'links' ? 'border-l-violet-500/60 bg-violet-500/[0.06]' : 'border-l-red-500/30'"
               >
-                <span class="text-sky-400">links</span><span class="text-zinc-600">:</span>
-                <span class="text-zinc-400"> ["stripe.com/docs/declines"]</span>
+                <span class="text-sky-400">links</span><span class="text-dimmed">:</span>
+                <span class="text-muted"> ["stripe.com/docs/declines"]</span>
               </div>
             </div>
           </div>
@@ -197,14 +197,14 @@ function startAnimation() {
         :transition="{ duration: 0.5, delay: 0.2 }"
         :in-view-options="{ once: true }"
       >
-        <div ref="rightPanelRef" class="h-full overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div ref="rightPanelRef" class="h-full overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 flex items-center gap-1.5 font-mono text-xs text-zinc-600">
+            <span class="ml-3 flex items-center gap-1.5 font-mono text-xs text-dimmed">
               <UIcon name="i-lucide-bot" class="size-3 text-violet-500" />
               AI Agent
             </span>
@@ -228,7 +228,7 @@ function startAnimation() {
           <div class="p-5 font-mono text-xs sm:text-sm leading-relaxed">
             <div
               class="mb-4 text-xs transition-colors duration-300"
-              :class="isComplete ? 'text-zinc-600' : 'text-zinc-500'"
+              :class="isComplete ? 'text-dimmed' : 'text-dimmed'"
             >
               {{ isComplete ? 'Analysis complete — 4 insights extracted' : 'Reading structured error context...' }}
             </div>
@@ -243,8 +243,8 @@ function startAnimation() {
               >
                 <span class="mt-px text-violet-500">→</span>
                 <div>
-                  <span class="text-zinc-300">{{ step.label }}</span>
-                  <p class="text-zinc-500">
+                  <span class="text-highlighted">{{ step.label }}</span>
+                  <p class="text-dimmed">
                     {{ step.text }}
                   </p>
                 </div>
@@ -253,11 +253,11 @@ function startAnimation() {
 
             <!-- Action line — always in DOM, opacity-controlled -->
             <div
-              class="mt-4 border-t border-zinc-800 pt-3 transition-opacity duration-500"
+              class="mt-4 border-t border-muted pt-3 transition-opacity duration-500"
               :class="isComplete ? 'opacity-100' : 'opacity-0'"
             >
-              <p class="text-xs text-zinc-500">
-                <span class="text-violet-500">&#10003;</span> Auto-created issue <span class="text-zinc-400">PAY-4521</span>
+              <p class="text-xs text-dimmed">
+                <span class="text-violet-500">&#10003;</span> Auto-created issue <span class="text-muted">PAY-4521</span>
               </p>
             </div>
           </div>

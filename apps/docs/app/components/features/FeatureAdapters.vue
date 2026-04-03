@@ -54,6 +54,23 @@ function setupCanvas() {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
+  function parseBlue500(): readonly [number, number, number] {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--color-blue-500').trim()
+    if (raw.startsWith('#') && raw.length >= 7) {
+      const h = raw.slice(1, 7)
+      return [
+        Number.parseInt(h.slice(0, 2), 16),
+        Number.parseInt(h.slice(2, 4), 16),
+        Number.parseInt(h.slice(4, 6), 16),
+      ] as const
+    }
+    return [40, 83, 255] as const
+  }
+
+  const [blueR, blueG, blueB] = parseBlue500()
+  const borderMuted
+    = getComputedStyle(document.documentElement).getPropertyValue('--ui-border-muted').trim() || '#3f3f46'
+
   let w = 0
   let h = 0
   let P: Paths | null = null
@@ -123,7 +140,7 @@ function setupCanvas() {
     ctx.beginPath()
     ctx.moveTo(path[0].x, path[0].y)
     for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y)
-    ctx.strokeStyle = '#27272a'
+    ctx.strokeStyle = borderMuted
     ctx.lineWidth = 1
     ctx.lineCap = 'square'
     ctx.lineJoin = 'miter'
@@ -152,7 +169,7 @@ function setupCanvas() {
       ctx.beginPath()
       ctx.moveTo(a.x, a.y)
       ctx.lineTo(b.x, b.y)
-      ctx.strokeStyle = `rgba(40,83,255,${alpha})`
+      ctx.strokeStyle = `rgba(${blueR},${blueG},${blueB},${alpha})`
       ctx.lineWidth = 2
       ctx.lineCap = 'round'
       ctx.stroke()
@@ -161,8 +178,8 @@ function setupCanvas() {
     const hp = ptAt(path, Math.min(Math.max(0, head), total))
     if (head >= -2 && head <= total + 5) {
       const g = ctx.createRadialGradient(hp.x, hp.y, 0, hp.x, hp.y, 8)
-      g.addColorStop(0, 'rgba(80,130,255,0.35)')
-      g.addColorStop(1, 'rgba(40,83,255,0)')
+      g.addColorStop(0, `rgba(${Math.min(255, blueR + 40)},${Math.min(255, blueG + 47)},${blueB},0.35)`)
+      g.addColorStop(1, `rgba(${blueR},${blueG},${blueB},0)`)
       ctx.beginPath()
       ctx.arc(hp.x, hp.y, 8, 0, Math.PI * 2)
       ctx.fillStyle = g
@@ -180,8 +197,8 @@ function setupCanvas() {
     const g = ctx.createRadialGradient(
       P.hubCenter.x, P.hubCenter.y, 0, P.hubCenter.x, P.hubCenter.y, P.hubR,
     )
-    g.addColorStop(0, 'rgba(40,83,255,0.06)')
-    g.addColorStop(1, 'rgba(40,83,255,0)')
+    g.addColorStop(0, `rgba(${blueR},${blueG},${blueB},0.06)`)
+    g.addColorStop(1, `rgba(${blueR},${blueG},${blueB},0)`)
     ctx.beginPath()
     ctx.arc(P.hubCenter.x, P.hubCenter.y, P.hubR, 0, Math.PI * 2)
     ctx.fillStyle = g
@@ -256,20 +273,20 @@ function setupCanvas() {
                 <slot name="title" mdc-unwrap="p" /><span class="text-primary">.</span>
               </div>
             </div>
-            <p v-if="$slots.description" class="max-w-md text-sm leading-relaxed text-zinc-400">
+            <p v-if="$slots.description" class="max-w-md text-sm leading-relaxed text-muted">
               <slot name="description" mdc-unwrap="p" />
             </p>
             <div class="mt-5 flex flex-wrap gap-2">
               <span
                 v-for="pill in pills"
                 :key="pill.label"
-                class="inline-flex items-center gap-1.5 border border-zinc-800 bg-zinc-900/50 px-3 py-1 font-mono text-[11px] text-zinc-400"
+                class="inline-flex items-center gap-1.5 border border-muted bg-elevated/50 px-3 py-1 font-mono text-[11px] text-muted"
               >
-                <UIcon :name="pill.icon" class="size-3 text-accent-blue" />
+                <UIcon :name="pill.icon" class="size-3 text-primary" />
                 {{ pill.label }}
               </span>
             </div>
-            <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-zinc-500 hover:text-accent-blue transition-colors">
+            <NuxtLink v-if="props.link" :to="props.link" class="mt-4 inline-flex items-center gap-1.5 font-mono text-xs text-dimmed hover:text-primary transition-colors">
               {{ props.linkLabel || 'Learn more' }}
               <UIcon name="i-lucide-arrow-right" class="size-3" />
             </NuxtLink>
@@ -284,34 +301,34 @@ function setupCanvas() {
         >
           <div class="space-y-5">
             <div class="flex items-start gap-3">
-              <UIcon name="i-lucide-zap" class="size-4 mt-0.5 shrink-0 text-accent-blue" />
+              <UIcon name="i-lucide-zap" class="size-4 mt-0.5 shrink-0 text-primary" />
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   Non-blocking
                 </p>
-                <p class="mt-1 text-xs leading-relaxed text-zinc-500">
+                <p class="mt-1 text-xs leading-relaxed text-dimmed">
                   Pipeline runs in the background. Your response ships immediately.
                 </p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <UIcon name="i-lucide-shield-check" class="size-4 mt-0.5 shrink-0 text-accent-blue" />
+              <UIcon name="i-lucide-shield-check" class="size-4 mt-0.5 shrink-0 text-primary" />
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   Guaranteed delivery
                 </p>
-                <p class="mt-1 text-xs leading-relaxed text-zinc-500">
+                <p class="mt-1 text-xs leading-relaxed text-dimmed">
                   Exponential backoff with jitter ensures logs reach every destination.
                 </p>
               </div>
             </div>
             <div class="flex items-start gap-3">
-              <UIcon name="i-lucide-plug" class="size-4 mt-0.5 shrink-0 text-accent-blue" />
+              <UIcon name="i-lucide-plug" class="size-4 mt-0.5 shrink-0 text-primary" />
               <div>
-                <p class="font-mono text-xs text-zinc-300">
+                <p class="font-mono text-xs text-highlighted">
                   Bring your own drain
                 </p>
-                <p class="mt-1 text-xs leading-relaxed text-zinc-500">
+                <p class="mt-1 text-xs leading-relaxed text-dimmed">
                   Write a simple function to send logs anywhere.
                 </p>
               </div>
@@ -326,14 +343,14 @@ function setupCanvas() {
         :transition="{ duration: 0.5, delay: 0.1 }"
         :in-view-options="{ once: true }"
       >
-        <div class="overflow-hidden border border-zinc-800 bg-[#0c0c0e]">
-          <div class="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
+        <div class="overflow-hidden border border-muted bg-default">
+          <div class="flex items-center gap-2 border-b border-muted px-4 py-3">
             <div class="flex gap-1.5">
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
-              <div class="size-3 rounded-full bg-zinc-700" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
+              <div class="size-3 rounded-full bg-accented" />
             </div>
-            <span class="ml-3 font-mono text-xs text-zinc-600">evlog-drain.ts</span>
+            <span class="ml-3 font-mono text-xs text-dimmed">evlog-drain.ts</span>
           </div>
 
           <div class="px-5 pt-5 pb-4 font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto">
@@ -351,19 +368,19 @@ function setupCanvas() {
 })</code></pre>
           </div>
 
-          <div ref="containerRef" class="relative flex flex-col items-center w-full border-t border-zinc-800/50 pt-6 sm:pt-10 pb-5 px-3">
+          <div ref="containerRef" class="relative flex flex-col items-center w-full border-t border-muted/50 pt-6 sm:pt-10 pb-5 px-3">
             <canvas ref="canvasRef" class="absolute top-0 left-0 pointer-events-none hidden sm:block" />
 
             <!-- evlog hub -->
-            <div data-node="evlog" class="relative z-10 flex flex-col items-center border border-accent-blue/30 bg-[#0a0a0e] px-6 py-3">
+            <div data-node="evlog" class="relative z-10 flex flex-col items-center border border-primary/30 bg-default px-6 py-3">
               <div class="flex items-center gap-1.5">
                 <span class="relative flex size-1.5">
-                  <span class="absolute inline-flex size-full animate-ping bg-accent-blue/40" />
-                  <span class="relative inline-flex size-1.5 bg-accent-blue" />
+                  <span class="absolute inline-flex size-full animate-ping bg-primary/40" />
+                  <span class="relative inline-flex size-1.5 bg-primary" />
                 </span>
-                <span class="font-mono text-sm font-medium text-white">evlog</span>
+                <span class="font-mono text-sm font-medium text-default">evlog</span>
               </div>
-              <span class="font-mono text-[7px] tracking-widest text-zinc-600 mt-1.5">BATCH · RETRY · FANOUT</span>
+              <span class="font-mono text-[7px] tracking-widest text-dimmed mt-1.5">BATCH · RETRY · FANOUT</span>
             </div>
 
             <div class="h-8 sm:h-16 md:h-20" />
@@ -376,20 +393,20 @@ function setupCanvas() {
               >
                 <div
                   :data-adapter="idx"
-                  class="flex items-center gap-1.5 border border-zinc-800 bg-[#0a0a0e] px-2.5 py-1.5"
+                  class="flex items-center gap-1.5 border border-muted bg-default px-2.5 py-1.5"
                 >
-                  <UIcon :name="adapter.icon" class="size-3 shrink-0 text-zinc-500" />
-                  <span class="font-mono text-[9px] text-zinc-400 whitespace-nowrap">{{ adapter.name }}</span>
+                  <UIcon :name="adapter.icon" class="size-3 shrink-0 text-dimmed" />
+                  <span class="font-mono text-[9px] text-muted whitespace-nowrap">{{ adapter.name }}</span>
                 </div>
               </div>
             </div>
 
             <div class="relative z-10 mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-              <span class="font-mono text-[9px] text-zinc-600">+ File System</span>
-              <span class="font-mono text-[9px] text-zinc-700">·</span>
-              <span class="font-mono text-[9px] text-zinc-600">Custom drains</span>
-              <span class="font-mono text-[9px] text-zinc-700">·</span>
-              <span class="font-mono text-[9px] text-zinc-500">and more</span>
+              <span class="font-mono text-[9px] text-dimmed">+ File System</span>
+              <span class="font-mono text-[9px] text-dimmed">·</span>
+              <span class="font-mono text-[9px] text-dimmed">Custom drains</span>
+              <span class="font-mono text-[9px] text-dimmed">·</span>
+              <span class="font-mono text-[9px] text-muted">and more</span>
             </div>
           </div>
         </div>

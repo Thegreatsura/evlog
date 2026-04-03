@@ -1141,7 +1141,7 @@ evlog provides [Agent Skills](https://www.evlog.dev/getting-started/agent-skills
 ### Installation
 
 ```bash
-npx add-skill hugorcd/evlog
+npx skills add https://www.evlog.dev
 ```
 
 ### What it does

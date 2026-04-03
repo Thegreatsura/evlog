@@ -34,12 +34,12 @@ onMounted(() => {
   <section class="relative overflow-hidden flex flex-col">
     <div
       class="absolute inset-x-0 top-0 h-24 z-[1] pointer-events-none"
-      style="background: linear-gradient(180deg, #000000 0%, transparent 100%)"
+      style="background: linear-gradient(180deg, #09090b 0%, transparent 100%)"
     />
 
     <div
       class="absolute inset-0"
-      style="background: linear-gradient(180deg, #000000 0%, #000711 6%, #001133 14%, #002266 22%, #0044CC 32%, #0055FF 42%, #0077FF 52%, #0099FF 62%, #44BBFF 72%, #88D4FF 80%, #BBE6FF 88%, #E0F3FF 94%, #FFFFFF 100%)"
+      style="background: linear-gradient(180deg, #09090b 0%, #000711 6%, #001133 14%, #002266 22%, #0044CC 32%, #0055FF 42%, #0077FF 52%, #0099FF 62%, #44BBFF 72%, #88D4FF 80%, #BBE6FF 88%, #E0F3FF 94%, #FFFFFF 100%)"
     />
 
     <ClientOnly>
@@ -82,7 +82,7 @@ onMounted(() => {
               <span class="cta-dot">.</span>
             </h2>
           </div>
-          <p class="text-base leading-relaxed text-zinc-200 mb-10">
+          <p class="text-base leading-relaxed text-highlighted mb-10">
             <slot name="description" mdc-unwrap="p" />
           </p>
 
@@ -90,7 +90,7 @@ onMounted(() => {
             <UButton
               to="/getting-started/installation"
               size="lg"
-              class="bg-white hover:bg-zinc-100 text-black border-0"
+              class="bg-white hover:bg-white/90 text-black border-0"
             >
               Get Started
               <template #trailing>
@@ -127,15 +127,15 @@ onMounted(() => {
 
     <div class="relative z-10 mt-auto pt-32 md:pt-44 pb-4">
       <div class="max-w-4xl mx-auto px-6 flex items-center justify-between">
-        <div class="text-xs font-mono italic tracking-tight text-zinc-500">
+        <div class="text-xs font-mono italic tracking-tight text-dimmed">
           &copy; {{ new Date().getFullYear() }} - Made by
-          <a href="https://hrcd.fr/" target="_blank" rel="noopener noreferrer" class="hover:underline text-zinc-700">HugoRCD</a>
+          <a href="https://hrcd.fr/" target="_blank" rel="noopener noreferrer" class="hover:underline text-dimmed">HugoRCD</a>
         </div>
         <div class="flex items-center gap-3">
-          <a href="https://x.com/hugorcd" target="_blank" rel="noopener noreferrer" aria-label="X" class="text-zinc-400 hover:text-zinc-700 transition-colors">
+          <a href="https://x.com/hugorcd" target="_blank" rel="noopener noreferrer" aria-label="X" class="text-muted hover:text-dimmed transition-colors">
             <UIcon name="i-simple-icons-x" class="size-4" />
           </a>
-          <a href="https://github.com/hugorcd/evlog" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-zinc-400 hover:text-zinc-700 transition-colors">
+          <a href="https://github.com/hugorcd/evlog" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-muted hover:text-dimmed transition-colors">
             <UIcon name="i-simple-icons-github" class="size-4" />
           </a>
         </div>
