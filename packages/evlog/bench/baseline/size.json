@@ -2,8 +2,8 @@
   "entries": [
     {
       "entry": "framework/nitro",
-      "raw": 18108,
-      "gzip": 7074
+      "raw": 18302,
+      "gzip": 7125
     },
     {
       "entry": "framework/next",
@@ -142,7 +142,7 @@
     }
   ],
   "total": {
-    "raw": 129523,
-    "gzip": 47119
+    "raw": 129717,
+    "gzip": 47170
   }
 }
