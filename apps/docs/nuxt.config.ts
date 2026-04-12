@@ -1,28 +1,5 @@
-import { createRequire } from 'node:module'
-import { dirname } from 'node:path'
-
-/** Monorepo: ensure Rollup resolves `vaul-vue` the same way as dev. */
-const require = createRequire(import.meta.url)
-const vaulVueRoot = dirname(dirname(require.resolve('vaul-vue')))
-
 export default defineNuxtConfig({
   extends: ['docus'],
-
-  alias: {
-    'vaul-vue': vaulVueRoot,
-  },
-
-  vite: {
-    resolve: {
-      dedupe: ['vaul-vue'],
-    },
-    ssr: {
-      noExternal: ['vaul-vue'],
-    },
-    optimizeDeps: {
-      include: ['vaul-vue'],
-    },
-  },
 
   routeRules: {
     '/getting-started': { redirect: { to: '/getting-started/introduction', statusCode: 301 } },
