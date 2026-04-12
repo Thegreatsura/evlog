@@ -6,7 +6,7 @@
 
 The patch removes `vue` from `dependencies` (it stays in `peerDependencies`). The last remaining dependency line must **not** end with a trailing comma — `package.json` must stay strict JSON (Vite’s commonjs resolver parses it). Tracked via `patchedDependencies` in the root `package.json`. See [Bun patch](https://bun.sh/docs/install/patch).
 
-`apps/docs` declares **`vaul-vue` as a direct dependency** (same version as `@nuxt/ui`). **`apps/docs/nuxt.config.ts`** also sets an explicit **`alias` + Vite `ssr.noExternal` / `optimizeDeps`** so Rollup can resolve `vaul-vue` from `@nuxt/ui` on Vercel (monorepo hoisting).
+`apps/docs` may pin **`vaul-vue`** to the same version as `@nuxt/ui` so the monorepo resolves the package reliably; the Bun patch is what fixes duplicate Vue (no Nuxt `alias` / Vite workarounds needed).
 
 When upgrading `vaul-vue`, refresh or drop this patch if upstream fixes the manifest.
 
