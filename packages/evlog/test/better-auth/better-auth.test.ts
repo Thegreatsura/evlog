@@ -159,6 +159,16 @@ describe('identifyUser', () => {
     expect(user.emailVerified).toBeUndefined()
   })
 
+  it('always includes id even when fields omits it', () => {
+    const log = createMockLogger()
+    identifyUser(log, createMockSession(), { fields: ['name', 'email'] })
+
+    const user = log.setCalls[0].user as Record<string, unknown>
+    expect(user.id).toBe('usr_123')
+    expect(user.name).toBe('Hugo Richard')
+    expect(user.email).toBe('hugo@example.com')
+  })
+
   it('handles string dates in session', () => {
     const log = createMockLogger()
     const session = createMockSession({
@@ -270,7 +280,7 @@ describe('createAuthMiddleware', () => {
     expect(authData.identified).toBe(false)
   })
 
-  it('catches errors silently', async () => {
+  it('catches errors and sets auth metadata with error flag', async () => {
     const log = createMockLogger()
     const auth = {
       api: {
@@ -281,6 +291,27 @@ describe('createAuthMiddleware', () => {
 
     const result = await identify(log, new Headers())
     expect(result).toBe(false)
+    const authData = log.setCalls.find(c => c.auth)?.auth as Record<string, unknown>
+    expect(authData).toBeDefined()
+    expect(authData.identified).toBe(false)
+    expect(authData.error).toBe(true)
+    expect(typeof authData.resolvedIn).toBe('number')
+  })
+
+  it('calls onAnonymous on error path', async () => {
+    const log = createMockLogger()
+    const auth = {
+      api: {
+        getSession: vi.fn(() => Promise.reject(new Error('DB down'))),
+      },
+    }
+    const onAnonymous = vi.fn()
+    const identify = createAuthMiddleware(auth, { onAnonymous })
+
+    await identify(log, new Headers())
+
+    expect(onAnonymous).toHaveBeenCalledOnce()
+    expect(onAnonymous).toHaveBeenCalledWith(log)
   })
 
   it('passes identify options through', async () => {

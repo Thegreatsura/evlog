@@ -125,7 +125,12 @@ function extractUserData(
   const fields = options?.fields ?? DEFAULT_USER_FIELDS
   const data: Record<string, unknown> = {}
 
+  if (user.id !== undefined && user.id !== null) {
+    data.id = user.id
+  }
+
   for (const field of fields) {
+    if (field === 'id') continue
     const value = user[field]
     if (value === undefined || value === null) continue
 
@@ -297,7 +302,10 @@ export function createAuthMiddleware(
       if (options?.onAnonymous) await options.onAnonymous(log)
       return false
     } catch (err) {
+      const resolvedIn = Date.now() - start
+      log.set({ auth: { resolvedIn, identified: false, error: true } } as Record<string, unknown>)
       if (isDev) console.warn('[evlog/better-auth] Session resolution failed:', err)
+      if (options?.onAnonymous) await options.onAnonymous(log)
       return false
     }
   }
