@@ -13,6 +13,6 @@ export default defineConfig({
   modules: [
     evlog({
       env: { service: 'tanstack-start-example' },
-    }) as NitroModuleSlot,
+    }) as unknown as NitroModuleSlot,
   ],
 })

@@ -81,7 +81,26 @@ export default defineNuxtConfig({
   mdc: {
     highlight: {
       noApiRoute: false,
-      langs: ['tsx'],
+      // Include every language used in `content/` — a narrow list (e.g. only `tsx`) breaks SSR
+      // on refresh when Shiki/MDC cannot load grammars for `bash`, `vue`, etc.
+      langs: [
+        'apl',
+        'bash',
+        'css',
+        'diff',
+        'html',
+        'js',
+        'json',
+        'md',
+        'mdc',
+        'shell',
+        'toml',
+        'ts',
+        'tsx',
+        'typescript',
+        'vue',
+        'yaml',
+      ],
     },
   },
 

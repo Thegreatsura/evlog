@@ -3,9 +3,18 @@
   "extends": [
     "github>nuxt/renovate-config-nuxt"
   ],
-  "packageRules": [{
-    "matchDepTypes": ["resolutions"],
-    "enabled": false
-  }],
+  "schedule": ["before 3am on Monday"],
+  "timezone": "UTC",
+  "packageRules": [
+    {
+      "matchDepTypes": ["resolutions"],
+      "enabled": false
+    },
+    {
+      "description": "Same weekly window as the repo (nuxt preset uses a broader schedule for framework packages)",
+      "matchPackagePatterns": ["^@nuxt/", "^nuxt"],
+      "schedule": ["before 3am on Monday"]
+    }
+  ],
   "postUpdateOptions": ["pnpmDedupe"]
 }

@@ -51,6 +51,11 @@ export default defineAppConfig({
         base: 'active:translate-y-px transition-transform duration-300',
       },
     },
+    contentToc: {
+      defaultVariants: {
+        highlightVariant: 'circuit'
+      }
+    },
     contentSurround: {
       variants: {
         direction: {
