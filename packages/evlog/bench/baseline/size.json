@@ -18,7 +18,7 @@
     {
       "entry": "adapter/datadog",
       "raw": 6149,
-      "gzip": 2504
+      "gzip": 2505
     },
     {
       "entry": "framework/vite",
@@ -28,7 +28,7 @@
     {
       "entry": "adapter/sentry",
       "raw": 6208,
-      "gzip": 2401
+      "gzip": 2402
     },
     {
       "entry": "adapter/otlp",
@@ -53,7 +53,7 @@
     {
       "entry": "adapter/posthog",
       "raw": 4994,
-      "gzip": 1541
+      "gzip": 1542
     },
     {
       "entry": "error",
@@ -98,7 +98,7 @@
     {
       "entry": "adapter/better-stack",
       "raw": 2742,
-      "gzip": 1119
+      "gzip": 1120
     },
     {
       "entry": "framework/fastify",
@@ -153,6 +153,6 @@
   ],
   "total": {
     "raw": 133014,
-    "gzip": 48646
+    "gzip": 48650
   }
 }
