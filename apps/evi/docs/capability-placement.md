@@ -65,9 +65,28 @@ whose correctness depends on two parties not sharing a context. `content_review`
 and `content_rewrite` exist as separate subagents because a reviewer that can
 edit talks itself into changes it cannot justify, and a writer that has read the
 review's reasoning rewrites to that reasoning instead of to the page. The
-isolation is the mechanism, not the tidiness. Both re-export the root sandbox,
-since a declared subagent inherits nothing and the framework default has no
-checkout.
+conversation isolation keeps the roles separate. `agent/lib/content-sandbox.ts`
+explicitly selects `parent.sandbox` through eve's callback API, so both agents
+read the parent's branch and uncommitted pages without cloning another checkout.
+They must not add sandbox seeds or packaged skills, which eve disallows for a
+shared workspace. The parent captures a page identity with `content_snapshot`;
+the child uses `content_load` to verify its digest and source commit. Both tools
+are read-only. The writer returns proposed text and its input identity. The
+parent waits for readers to finish, checks that identity again, and applies
+reviewed changes serially with its existing editing tools. It then captures the
+saved file and requests a fresh review before publishing. These instructions
+coordinate Evi's edits; the snapshot check does not make writes atomic against
+another process. Concurrent external editing requires coordination before Evi
+continues. No custom write transaction or persistent lock is introduced.
+Logic and local Git regression tests live in `agent/lib/content/handoff.ts` and
+its colocated test, including rejection of stale snapshots after parent edits.
+`content-sandbox.test.ts` verifies that both declared agents select the parent.
+Their shell and file-write tools are disabled; `glob`, `grep` and `read_file`
+support source inspection. The parent executes examples and applies rewrites.
+Scans have a 30-second deadline and clean their staged passages through the
+sandbox file API even when no shell exit event arrives. If both scanning and
+cleanup fail, an aggregate error retains both failures and the original cause. Executable eval fixtures
+run in a child process with a 10-second timeout and forced termination.
 
 ## Review checklist
 
