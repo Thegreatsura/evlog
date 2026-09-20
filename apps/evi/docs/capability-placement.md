@@ -23,7 +23,11 @@ Use this order when placing a new capability:
    Evi-side logic a connection cannot express: credential brokering, gating,
    response shaping. Gate visibility with `defineDynamic` +
    `agent/lib/trust.ts` rather than checking inside `execute` alone.
-5. Reach for a **subagent** only at the trigger below. Do not create one to
+5. Use a static **workflow tool** when a repeatable operation must coordinate
+   durable, retryable steps or fan out to subagents and join their results. Keep
+   the executor in `agent/lib/` and the tool file as wiring. A recurring process
+   is authored and tested, not generated at runtime.
+6. Reach for a **subagent** only at the trigger below. Do not create one to
    make the tree look cleaner.
 
 ## The two-layer rule
@@ -92,11 +96,20 @@ sandbox file API even when no shell exit event arrives. If both scanning and
 cleanup fail, an aggregate error retains both failures and the original cause. Executable eval fixtures
 run in a child process with a 10-second timeout and forced termination.
 
+A fourth trigger is independent review of a broad task. The twice-weekly
+simplification sweep uses four hidden read-only specialists for code, tests,
+architecture, and communication, then a fifth specialist tries to disprove
+their findings. `simplification-sweep` is a static workflow tool because the
+fan-out, structured results, and verification join must be deterministic and
+replayable. The parent chooses bounded cohorts from a persistent coverage
+ledger and remains the only writer. All five children share its checkout
+through `agent/lib/review-sandbox.ts`; shell and file writes are disabled.
+
 ## Review checklist
 
 Before adding a capability, answer in the PR:
 
-1. Skill, schedule, connection, tool, or subagent, and why not the cheaper
+1. Skill, schedule, connection, tool, workflow tool, or subagent, and why not the cheaper
    one above it?
 2. Which `trust.ts` gate applies, and what does an autonomous turn see?
 3. Where does the logic live in `agent/lib/`, and where is its test?

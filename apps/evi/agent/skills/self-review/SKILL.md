@@ -119,17 +119,17 @@ The failure mode of this run is a confident output that is wrong, and the expens
 
 ## Dedupe
 
-Before filing anything: `linear__list_issues` on the evlog team, and `github__searchIssues` for an open issue or PR on the same ground, including your own drafts from earlier runs. A stale draft that still applies gets a rebase and a comment, not a replacement. A finding or proposal Hugo closed once does not come back: the decision was made.
+Before filing anything: `linear__list_issues` on the evlog team, and `github__searchIssues` for an open issue or PR on the same ground, including your own pull requests from earlier runs. An existing pull request that still applies gets an update, not a replacement. A finding or proposal Hugo closed once does not come back: the decision was made.
 
 ## Deliver
 
-**Mechanical fix, checks green, no judgement needed → draft PR.** One per finding, never bundled. Follow `contributing`: branch off `main` in `/workspace/repo`, run `pnpm run lint`, `pnpm run typecheck` and `pnpm run test`, add a changeset when the change touches a published package (an `apps/evi` change never needs one). The PR body names the guide or the declared capability the code contradicted.
+**Mechanical fix, readiness gate complete, no judgement needed → ready PR.** One per finding, never bundled. Follow `contributing`: branch off `main` in `/workspace/repo`, run `pnpm run lint`, `pnpm run typecheck` and `pnpm run test`, add a changeset when the change touches a published package (an `apps/evi` change never needs one), read CI, then request `hugorcd` as reviewer. If the gate cannot be completed, report the blocker instead of opening a draft. The PR body names the guide or declared capability the code contradicted.
 
 **Everything else → Linear issue** via `linear__save_issue` on the evlog team. A finding states the problem, what it contradicts, where it is, and the decision to make. A proposal states the observation that triggered it, what the capability would do, the rung of `capability-placement.md` it lands on, and what it costs. Label the two apart so the backlog stays readable.
 
 **A proposal never ships as code on your own initiative.** The repo forbids speculative code, and an unrequested capability is exactly that. The issue is the deliverable; building it is Hugo's call.
 
-Cap a run at three draft PRs and two proposals: the two you would defend, not everything that came to mind. Anything past the cap is named in the summary with a count, so a heavy week is visible rather than silently trimmed.
+Cap a run at three ready PRs and two proposals: the two you would defend, not everything that came to mind. Anything past the cap is named in the summary with a count, so a heavy week is visible rather than silently trimmed.
 
 Then post one line per artifact to the thread, links inline.
 

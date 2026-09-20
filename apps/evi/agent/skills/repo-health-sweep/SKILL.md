@@ -1,128 +1,169 @@
 ---
 name: repo-health-sweep
-description: Bi-weekly pass over the whole evlog repository, not just the agent's own surface. Checks every SKILL.md against the real package surface, the docs tree for stale or self-contradictory pages, the repo's own conventions, and the examples against the current API. Load this when the repo-health-sweep schedule fires, or when Hugo asks for a repo health sweep, a docs audit, a skills-vs-reality check, or a convention drift review.
+description: Twice-weekly, coverage-led simplification audit over the whole evlog repository and Evi's real communication. Rotates through code, tests, architecture, skills, docs, examples, instructions, issue replies, review comments, and PR bodies; calls the simplification-sweep workflow for independent parallel review and adversarial verification; opens ready pull requests for fully verified mechanical fixes; records proposals and rejected findings so later runs go deeper instead of repeating easy observations. Load this when the repo-health-sweep schedule fires, or when Hugo asks for repository simplification, an unslop pass, a clarity audit, a skills-vs-reality check, or a convention drift review.
 ---
 
 # Repo health sweep
 
-The self-review owns the agent's own surface. This sweep owns the rest of the
-repository: the published docs, the skills that describe the package, the
-repo's own conventions, and the runnable examples. Where they overlap, this
-skill covers the parts the self-review does not.
+This pass makes the repository easier to understand without changing what it means. It is not a search for short code at any cost. A smaller implementation that hides a protocol constraint, changes public behavior, or moves complexity elsewhere is worse.
 
-The failure mode is the same as self-review: a confident claim that is quietly
-out of date, and the expensive version is claiming something does not exist.
-Every check in this sweep is grounded in the current `main` before it is
-written down. This is the `source-research` procedure over the whole repo, not
-anything recalled.
+The pass runs twice a week. Each run reviews bounded cohorts, not the whole tree. Coverage accumulates in Linear so the next run reaches code the previous one did not.
 
-## The rule that never bends
+## What counts
 
-A finding names the file and the rule or source it contradicts, or it is
-dropped. A claim that an option, export, adapter or page is missing is proven
-by enumerating the real surface, never by the absence of a memory. Load
-`source-research` and follow it before drawing a conclusion about any package
-behavior.
+A finding needs a concrete cost and a behavior-preserving smaller shape.
 
-## The four lenses
+### Code
 
-### Skills vs reality
+- Dead imports, helpers, branches, parameters, commented-out code, or unreachable fallbacks.
+- A one-use wrapper that adds no policy, transformation, authority, or test boundary.
+- Duplicated implementations of an invariant already owned by one helper.
+- Defensive code that masks state already validated upstream.
+- A paragraph comment that can become one durable constraint, or a comment that only paraphrases the code.
 
-Every SKILL.md, internal and published, checked against the package surface it
-describes.
+Keep comments that explain a protocol quirk, security boundary, compatibility requirement, or deliberate trade-off. Do not report a public rename or behavior change as cleanup.
 
-- Internal: `.agents/skills/*` (create-adapter, create-enricher,
-  create-framework-integration, create-map-rule) and `apps/evi/agent/skills/*`.
-- Published: `skills/*` (analyze-logs, build-audit-logs,
-  review-logging-patterns).
-- What to check: every API name, option, default, or adapter the skill shows.
-  An `evlog.X` option must exist under that name; a function signature must be
-  the real one (a curried call shown where the API is two-arg is a bug); a
-  framework must export what the skill claims it does or does not.
-- Bar: a skill that describes old behavior is worse than no skill (`AGENTS.md`).
-  When a code change fixed a skill in this repo, that fix is the evidence the
-  skill used to drift.
+### Tests
 
-### Docs quality
+- A test that reimplements source logic instead of importing and exercising it.
+- Multiple tests with the same setup, action, assertion, and failure mode.
+- An obsolete compatibility or regression case whose triggering source path no longer exists.
+- A fixture or snapshot with no reader.
+- Mock-only coverage duplicated by a test through the real framework runtime or request driver.
+- An assertion that cannot fail independently of another assertion in the cohort.
 
-The published docs are the contract, so a wrong page costs real users.
+A proposed removal names the surviving test and compares inputs, runtime boundary, observable output, and failure mode. Keep coverage for public contracts, past regressions, framework lifecycles, adapter protocols, type guarantees, platform-specific runtimes, and distinct edge cases. Never weaken an assertion or remove a test only because the suite is large.
 
-- Pages that are unclear, stale, or inconsistent with each other. A page that
-  contradicts a sibling page about the same API is a finding even when both are
-  wrong the same way.
-- A feature that shipped without a docs page, or an option documented with the
-  wrong default.
-- A table (adapters, env vars, exports, flags) that lists sources the code does
-  not read, or omits ones it does. Cross-check against source, not against an
-  older page.
-- Anything `source-research` could not answer because no page covers it.
+### Architecture
 
-### Convention drift
+- One policy or state owned in multiple places.
+- A layer that only forwards data and has no independent contract.
+- An abstraction whose second use disappeared.
+- Logic in Eve wiring under `agent/` that belongs under `agent/lib/` with a colocated test.
+- Framework integrations that no longer share the contract required by root `AGENTS.md`.
+- A manual sequence that the installed framework now expresses directly.
 
-Places where the code or prose violates the repo's own rules.
+A different design is not evidence. Trace callers, exports, tests, configuration, and failure paths before proposing a boundary change.
 
-- Root `AGENTS.md`: export registration in all three of `package.json#exports`,
-  `package.json#typesVersions`, `tsdown.config.ts`; no `evlog/shared` import
-  (`evlog/toolkit` is the public name); the style rules ("no as any", no silent
-  fallbacks, no speculative options) applied to new code.
-- Changeset policy: a user-facing change merged with no changeset, or a
-  changeset shipped for a change confined to `apps/*`.
-- Test placement: logic under `agent/` or `packages/*/src` with no colocated
-  test, or the repo's testing rules (framework tests driving the real request
-  driver) violated.
-- Consistency with its own stated convention, including the ones in `AGENTS.md`
-  that the prose itself breaks.
+### Communication
 
-### Examples drift
+Review both authored rules and recent output:
 
-`examples/*` must match the current API. The examples are the first thing a
-user reads after the docs.
+- `apps/evi/agent/instructions.md`, skills, schedules, subagent prompts, evals, and repository templates.
+- Recent Evi-authored issue replies, review comments, and pull request titles and bodies.
+- Docs, READMEs, examples, and AGENTS.md files when they fall in the selected cohort.
 
-- A runnable example importing an option, export or signature that no longer
-  exists, or relying on a default that changed.
-- A skeleton directory (the `community-*-skeleton` dirs used by the create-*
-  skills) that no longer matches what the skill generates.
+Look for answers that bury the conclusion, repeat it, narrate retrieval, expose internal detail without a user action, or sound certain beyond the evidence. Check whether instructions conflict or duplicate one another. Preserve repros, acceptance criteria, constraints, uncertainty, and explanations that help the reader act.
 
-## Grounding
+## 1. Start from a clean source
 
-- **Run before you assert.** Anything you claim about the package surface is
-  executed in `/workspace/repo` on `main` or read from source. If it could not
-  be verified, it is written as a question, never as evidence in a PR body.
-- **Absence is proven by listing.** Enumerate the exports map, the docs index,
-  the adapters directory, the connect registry before calling something
-  missing.
-- **One counter-example kills a finding.** Grep the whole repo, not the
-  directory you were reading.
+Work in `/workspace/repo` on the current `main`. Record `git rev-parse HEAD`; every reviewer receives that revision. Load `contributing` before writing an artifact.
 
-## Dedupe
+Anything claimed about an API, option, export, adapter, example, or framework contract is read from source or executed at this revision. Absence is proven by enumerating the real surface. One counterexample kills a finding.
 
-Before filing anything: `linear__list_issues` on the evlog team, and
-`github__searchIssues` for an open issue, PR or draft on the same ground,
-including your own earlier runs. A stale draft that still applies gets a rebase
-and a comment, not a replacement. A finding Hugo closed once does not come
-back.
+## 2. Read the coverage ledger
 
-## Deliver
+Keep one Linear issue on the evlog team titled `Evi simplification coverage ledger`. Find it with `linear__list_issues`; create it only when absent. Read its comments with `linear__list_comments`.
 
-One report with concrete findings, each citing the file and the rule or source
-it contradicts, plus proposed diffs for the easy ones. The report is the
-deliverable; it goes to a Linear document, with a summary comment on the issue.
+Each run comment records:
 
-- **Mechanical fix, checks green, no judgement needed → draft PR.** One per
-  finding, never bundled. Follow `contributing`: branch off `main`,
-  `pnpm run lint`, `pnpm run typecheck`, `pnpm run test`. An `apps/evi` or
-  `apps/docs` content change never needs a changeset; a change to a published
-  package does.
-- **Everything else → Linear issue** via `linear__save_issue` on the evlog
-  team, or a proposal in the report when it is a decision rather than a fix.
-  Name the problem, what it contradicts, where it is, and the decision to make.
-- **A proposal never ships as code on your own initiative.** The report is the
-  deliverable; building it is Hugo's call.
+- revision and date;
+- exact code, test, architecture, and communication cohorts;
+- skipped areas and why;
+- confirmed findings and their destination;
+- rejected findings with the verifier's reason;
+- questions and blockers;
+- next cohorts.
 
-Post one line per artifact to the thread, links inline.
+A rejected finding is durable evidence. Do not raise it again unless the relevant source or maintainer decision changed.
 
-## When nothing is warranted
+## 3. Choose bounded cohorts
 
-One line: the lenses ran and nothing came up. Never invent a finding to fill
-the run, never file an issue to report that a lens was clean, and never open a
-PR for a rule the repo does not actually state.
+Choose one cohort for each reviewer. Prefer the least recently reviewed eligible area. Make the four scopes non-overlapping where possible.
+
+**Code cohort:** one package directory or a similarly sized part of `apps/evi/agent/lib/`. Name exact paths.
+
+**Test cohort:** one bounded test directory or one source area and its matching tests. Include both source and test paths so the reviewer can trace behavior rather than compare test names.
+
+**Architecture cohort:** one relationship, such as runtime to adapters, CLI rules to package exports, or Eve wiring to `agent/lib/`. Name both sides and the invariant being examined.
+
+**Communication cohort:** one authored surface plus a small sample of recent real output. Use GitHub search and context tools to collect Evi-authored issue replies or pull requests. Include exact URLs and excerpts in the workflow input. Do not claim to review artifacts that were not retrieved.
+
+Do not choose a cohort inside its cooldown when another eligible area exists. A recent change may override the cooldown when the diff itself is the reason for review.
+
+## 4. Run the workflow once
+
+Call `simplification-sweep` with:
+
+- the recorded revision;
+- the four exact scopes;
+- every relevant rejected finding or maintainer decision from the ledger.
+
+The tool fans out to hidden read-only specialists:
+
+1. `code_simplifier`;
+2. `test_reviewer`;
+3. `architecture_reviewer`;
+4. `communication_reviewer`.
+
+After all four settle, `finding_verifier` tries to disprove every candidate against the same checkout. The workflow returns confirmed findings, rejected findings, and open questions. Do not bypass verification or ask the root model to recreate a failed specialist's report from memory.
+
+## 5. Verify confirmed findings
+
+The workflow is review, not permission to edit.
+
+For each confirmed finding:
+
+1. Open the cited file and reproduce the evidence.
+2. Search the whole repository for callers and counterexamples.
+3. Check open Linear issues and GitHub issues or pull requests for the same ground.
+4. State the behavior that must remain unchanged.
+5. Identify the matching test before editing.
+6. Drop it if implementation requires a new option, compatibility branch, public rename, or judgement the report did not surface.
+
+A code or prose simplification gets a regression test when behavior could change. Pure removal still needs the existing checks that prove the affected surface.
+
+A test simplification additionally cites the surviving coverage and explains why the removed test has no distinct failure mode, runtime boundary, regression history, or public contract. Run the focused test file before and after the edit, then the full suite and coverage. If the equivalence cannot be demonstrated, keep the test.
+
+## 6. Deliver
+
+### Ready pull request
+
+A finding marked `pull_request` may ship automatically only when all of these hold:
+
+- it is mechanical and behavior-preserving;
+- the verifier confirmed it with high confidence;
+- the diff contains one finding and no opportunistic cleanup;
+- a matching test covers the change, or a test-only reduction proves the remaining coverage is equivalent;
+- `pnpm run lint`, `pnpm run typecheck`, `pnpm run test`, and affected content checks exit 0;
+- required changesets, skill updates, API snapshot review, and visual evidence are present;
+- the pull request body states the problem, change, preserved behavior, verification, and the reviewed revision.
+
+Open a normal, ready pull request, not a draft. Read CI once it settles and fix any failure before requesting review from `hugorcd`. If the branch cannot meet the readiness gate, do not open a half-finished pull request. Keep the result as a blocker or proposal in the report.
+
+Open at most two pull requests per run. One finding per pull request.
+
+### Proposal or question
+
+An architectural decision, uncertain reduction, or finding that needs product judgement becomes a Linear issue or an update to an existing one. State the current cost, evidence, proposed smaller boundary, behavior at risk, and decision required. Never implement a proposal autonomously.
+
+### Report and ledger
+
+Write the full run report as a Linear document. Then append the compact coverage entry to the ledger issue. Post one line per artifact in the schedule thread, with links inline.
+
+## Response-quality follow-up
+
+A weak real-world response may justify an eval fixture. Propose the fixture with the source artifact, failure mode, and expected behavior. Do not run live-model evals or change evaluation criteria unattended; the repository keeps those manual because they cost money and can redefine Evi's behavior.
+
+Useful eval coverage includes:
+
+- community answers that lead with the answer and explain the relevant why;
+- maintainer replies that stay direct without deleting necessary context;
+- pull request bodies that state problem, change, preserved behavior, and verification;
+- no repeated conclusion or repeated link;
+- internal implementation detail translated into an action the reader can take;
+- uncertainty preserved instead of polished away.
+
+## When nothing survives
+
+Record the cohorts and rejected candidates in the ledger, then say the lenses ran and nothing warranted a change. A clean cohort advances coverage. Never invent a finding to fill the run.

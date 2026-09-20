@@ -19,4 +19,17 @@ describe('authored skill frontmatter', () => {
       expect(parsed.description, file).toBeTruthy()
     }
   })
+
+  it('keeps scheduled autonomous pull requests out of draft state', () => {
+    const agentDir = join(import.meta.dirname, '..')
+    const skillNames = ['content-pass', 'repo-health-sweep', 'self-review', 'upstream-sync']
+
+    for (const name of skillNames) {
+      const skill = readFileSync(join(agentDir, 'skills', name, 'SKILL.md'), 'utf8')
+      const schedule = readFileSync(join(agentDir, 'schedules', `${name}.ts`), 'utf8')
+      expect(skill, name).not.toMatch(/draft PR/i)
+      expect(schedule, name).not.toMatch(/draft PR/i)
+      expect(`${skill}\n${schedule}`, name).toMatch(/ready PR/i)
+    }
+  })
 })
