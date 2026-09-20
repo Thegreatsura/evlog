@@ -101,9 +101,11 @@ simplification sweep uses four hidden read-only specialists for code, tests,
 architecture, and communication, then a fifth specialist tries to disprove
 their findings. `simplification-sweep` is a static workflow tool because the
 fan-out, structured results, and verification join must be deterministic and
-replayable. The parent chooses bounded cohorts from a persistent coverage
-ledger and remains the only writer. All five children share its checkout
-through `agent/lib/review-sandbox.ts`; shell and file writes are disabled.
+replayable. The result includes reviewer health, evidence limitations, and
+programmatic finding counts so the parent does not infer readiness from prose.
+The parent chooses bounded cohorts from a persistent coverage ledger and
+remains the only writer. All five children share its checkout through
+`agent/lib/review-sandbox.ts`; shell and file writes are disabled.
 
 ## Review checklist
 

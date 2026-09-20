@@ -33,4 +33,5 @@ export default defineEvlogHook({
   },
   ...(turnDrain ? { drain: turnDrain } : {}),
   sessionEvent: true,
+  subagentEvents: false,
 })

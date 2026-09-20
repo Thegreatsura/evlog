@@ -97,6 +97,11 @@ export interface EvlogEveOptions extends BaseEvlogOptions {
    * ```
    */
   enrichTurn?: (ctx: EveEnrichTurnContext) => Record<string, unknown> | void
+  /**
+   * Subscribe to subagent lifecycle events and add them to the parent turn.
+   * Default `true`. Disable this when the event source has no hook session context.
+   */
+  subagentEvents?: boolean
 }
 
 /** Minimal session shape accepted by {@link useLogger} as a fallback lookup key. */
@@ -1135,7 +1140,7 @@ export function defineEvlogHook(options: EvlogEveOptions = {}): HookDefinition {
   const messageMode = resolveMessageMode(options)
   const previewLength = options.messagePreviewLength ?? DEFAULT_MESSAGE_PREVIEW_LENGTH
 
-  return defineHook({
+  const hook = defineHook({
     events: {
       'session.started'(event, ctx) {
         runSafe(() => {
@@ -1539,6 +1544,16 @@ export function defineEvlogHook(options: EvlogEveOptions = {}): HookDefinition {
       },
     },
   })
+
+  if (options.subagentEvents === false) {
+    const events = { ...hook.events }
+    delete events['subagent.called']
+    delete events['subagent.started']
+    delete events['subagent.completed']
+    return { ...hook, events }
+  }
+
+  return hook
 }
 
 /** Options for {@link defineEvlogInstrumentation}. */

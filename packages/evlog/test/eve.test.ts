@@ -991,6 +991,15 @@ describe('evlog/eve', () => {
     })
   })
 
+  it('can omit subagent events that have no hook session context', () => {
+    const { events } = defineEvlogHook({ subagentEvents: false })
+
+    expect(events?.['subagent.called']).toBeUndefined()
+    expect(events?.['subagent.started']).toBeUndefined()
+    expect(events?.['subagent.completed']).toBeUndefined()
+    expect(events?.['turn.completed']).toBeTypeOf('function')
+  })
+
   it('marks a subagent started and times it to completion', async () => {
     const spies = createPipelineSpies()
     const hook = defineEvlogHook({ drain: spies.drain })

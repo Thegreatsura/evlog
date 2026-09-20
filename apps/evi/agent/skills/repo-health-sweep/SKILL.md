@@ -63,7 +63,7 @@ Anything claimed about an API, option, export, adapter, example, or framework co
 
 ## 2. Read the coverage ledger
 
-Keep one Linear issue on the evlog team titled `Evi simplification coverage ledger`. Find it with `linear__list_issues`; create it only when absent. Read its comments with `linear__list_comments`.
+Keep one Linear issue on the evlog team titled `Evi simplification coverage ledger`. Search that exact title once with `linear__list_issues`. Keep the returned issue ID for every read and write in the run, then read its comments with `linear__list_comments`. In a real run, create the issue when the exact search returns none. In a dry run, report the missing ledger and do not create it.
 
 Each run comment records:
 
@@ -87,7 +87,7 @@ Choose one cohort for each reviewer. Prefer the least recently reviewed eligible
 
 **Architecture cohort:** one relationship, such as runtime to adapters, CLI rules to package exports, or Eve wiring to `agent/lib/`. Name both sides and the invariant being examined.
 
-**Communication cohort:** one authored surface plus a small sample of recent real output. Use GitHub search and context tools to collect Evi-authored issue replies or pull requests. Include exact URLs and excerpts in the workflow input. Do not claim to review artifacts that were not retrieved.
+**Communication cohort:** one authored surface plus a small sample of recent real output. Use GitHub search and context tools to collect Evi-authored issue replies or pull requests. Include each exact URL and its complete excerpt in the workflow input. Exclude an artifact when its body is missing, JavaScript-only, or truncated, and record the retrieval limitation. Do not ask the reviewer to recover external content from a link.
 
 Do not choose a cohort inside its cooldown when another eligible area exists. A recent change may override the cooldown when the diff itself is the reason for review.
 
@@ -106,11 +106,13 @@ The tool fans out to hidden read-only specialists:
 3. `architecture_reviewer`;
 4. `communication_reviewer`.
 
-After all four settle, `finding_verifier` tries to disprove every candidate against the same checkout. The workflow returns confirmed findings, rejected findings, and open questions. Do not bypass verification or ask the root model to recreate a failed specialist's report from memory.
+After all four settle, `finding_verifier` tries to disprove every candidate against the same checkout. The workflow returns reviewer status, limitations, programmatic counts, confirmed findings, rejected findings, and open questions. Read `status`, `reviewers`, and `counts` before the findings. A `degraded` run has missing evidence and cannot produce a pull-request-ready finding. A `recovered` run may proceed, but the final report names the recovered failure. Copy counts from the result; never count finding IDs in prose. Do not bypass verification or ask the root model to recreate a failed specialist's report from memory.
 
 ## 5. Verify confirmed findings
 
-The workflow is review, not permission to edit.
+The workflow is review, not permission to edit. Call its survivors workflow-confirmed candidates until this section passes. Do not call them ready findings or pull-request findings.
+
+A dry run still completes every read-only check in this section. It skips edits, ledger writes, issue creation, branches, pushes, and pull requests. Do not stop after the workflow result and describe the remaining verification as future work.
 
 For each confirmed finding:
 
@@ -129,7 +131,7 @@ A test simplification additionally cites the surviving coverage and explains why
 
 ### Ready pull request
 
-A finding marked `pull_request` may ship automatically only when all of these hold:
+A workflow-confirmed candidate marked `pull_request` becomes PR-ready only when the parent verification above also passes and all of these hold:
 
 - it is mechanical and behavior-preserving;
 - the verifier confirmed it with high confidence;
@@ -150,6 +152,17 @@ An architectural decision, uncertain reduction, or finding that needs product ju
 ### Report and ledger
 
 Write the full run report as a Linear document. Then append the compact coverage entry to the ledger issue. Post one line per artifact in the schedule thread, with links inline.
+
+Use this order in the final response:
+
+1. Run status, revision, duration, and whether writes were enabled.
+2. One line per reviewer with `complete`, `recovered`, or `incomplete` and any limitation.
+3. The workflow's exact proposed, confirmed, rejected, question, proposal, and pull-request-candidate counts.
+4. Each surviving candidate with ID, path and lines, problem, smaller shape, preserved behavior, matching test, parent-verification result, and destination.
+5. Recoverable errors and their effect on coverage.
+6. Links to created artifacts, or the exact next action in a dry run.
+
+Say `0 PR-ready` until parent verification and the readiness gate pass. A workflow-confirmed count is not a PR-ready count.
 
 ## Response-quality follow-up
 
