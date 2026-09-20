@@ -2,7 +2,7 @@ import type { WorkflowToolContext } from 'eve/tools'
 import { z } from 'zod'
 
 export const simplificationInputSchema = z.object({
-  revision: z.string().min(7).describe('Commit SHA reviewed by every specialist'),
+  revision: z.string().regex(/^[a-f0-9]{40}$/).describe('Full commit SHA reviewed by every specialist'),
   codeScope: z.string().min(1).describe('Exact files or directories assigned to the code simplifier'),
   testScope: z.string().min(1).describe('Exact test files and corresponding source assigned to the test reviewer'),
   architectureScope: z.string().min(1).describe('Exact boundaries and relationships assigned to the architecture reviewer'),
@@ -88,6 +88,19 @@ const verificationOutputSchema = {
   additionalProperties: false,
 } as const
 
+const revisionResultSchema = z.object({
+  revision: z.string().regex(/^[a-f0-9]{40}$/),
+})
+
+const revisionOutputSchema = {
+  type: 'object',
+  properties: {
+    revision: { type: 'string', pattern: '^[a-f0-9]{40}$' },
+  },
+  required: ['revision'],
+  additionalProperties: false,
+} as const
+
 const verificationResultSchema = z.object({
   findings: z.array(findingResultSchema.extend({
     verdict: z.enum(['confirmed', 'rejected', 'question']),
@@ -125,6 +138,13 @@ export function reviewMessage(
     'Return status complete when every assigned artifact was reviewed, recovered when a failed lookup was replaced with equivalent complete evidence, or incomplete when any evidence remains missing or truncated. Record every failed or incomplete lookup in limitations. Do not create a finding from incomplete evidence.',
     'Return only findings that reduce code, tests, or prose while preserving intended behavior. Every finding needs an exact path, line range, evidence, the smaller shape, preserved behavior, risk, and confidence from 0 to 1. Taste is not a finding.',
   ].filter(Boolean).join('\n\n')
+}
+
+export function revisionMessage(revision: string): string {
+  return [
+    `Verify that the shared checkout is exactly commit ${revision} before any review starts.`,
+    'Call revision_check with this commit. Do not inspect candidates or return from memory. Return only the tool-confirmed revision.',
+  ].join('\n\n')
 }
 
 export function verificationMessage(
@@ -180,6 +200,14 @@ export async function runSimplificationSweep(
 ) {
   'use workflow'
 
+  const checkout = revisionResultSchema.parse(await ctx.agent('finding_verifier', {
+    message: revisionMessage(input.revision),
+    outputSchema: revisionOutputSchema,
+  }))
+  if (checkout.revision !== input.revision) {
+    throw new Error(`Shared checkout revision ${checkout.revision} does not match requested revision ${input.revision}.`)
+  }
+
   const assignments: ReviewAssignment[] = [
     { agent: 'code_simplifier', category: 'code', scope: input.codeScope },
     { agent: 'test_reviewer', category: 'tests', scope: input.testScope },
@@ -191,7 +219,7 @@ export async function runSimplificationSweep(
     assignments.map(async (assignment): Promise<ReviewResult> => {
       try {
         const review = reviewResultSchema.parse(await ctx.agent(assignment.agent, {
-          message: reviewMessage(input.revision, assignment, input.priorDecisions),
+          message: reviewMessage(checkout.revision, assignment, input.priorDecisions),
           outputSchema: reviewOutputSchema,
         }))
 
@@ -212,12 +240,12 @@ export async function runSimplificationSweep(
   )
 
   const verification = verificationResultSchema.parse(await ctx.agent('finding_verifier', {
-    message: verificationMessage(input.revision, reviews, input.priorDecisions),
+    message: verificationMessage(checkout.revision, reviews, input.priorDecisions),
     outputSchema: verificationOutputSchema,
   }))
 
   return {
-    revision: input.revision,
+    revision: checkout.revision,
     reviews,
     verification,
     ...summarizeSimplificationSweep(reviews, verification),

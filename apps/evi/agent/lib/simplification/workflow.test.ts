@@ -2,6 +2,7 @@ import type { WorkflowToolContext } from 'eve/tools'
 import { describe, expect, it, vi } from 'vitest'
 import {
   reviewMessage,
+  revisionMessage,
   runSimplificationSweep,
   simplificationInputSchema,
   summarizeSimplificationSweep,
@@ -24,8 +25,10 @@ const finding = {
   confidence: 0.9,
 }
 
+const revision = 'a'.repeat(40)
+
 const input = {
-  revision: 'abcdef0',
+  revision,
   codeScope: 'packages/evlog/src/runtime',
   testScope: 'packages/evlog/test/core and packages/evlog/src/runtime',
   architectureScope: 'packages/evlog/src/adapters and packages/evlog/src/shared',
@@ -38,13 +41,25 @@ describe('simplification workflow', () => {
     expect(simplificationInputSchema.safeParse(input).success).toBe(true)
 
     expect(simplificationInputSchema.safeParse({
-      revision: 'abcdef0',
+      revision,
       codeScope: '',
       testScope: '',
       architectureScope: '',
       communicationScope: '',
       priorDecisions: [],
     }).success).toBe(false)
+  })
+
+  it('requires a full commit SHA', () => {
+    expect(simplificationInputSchema.safeParse({ ...input, revision: 'abcdef0' }).success).toBe(false)
+  })
+
+  it('requires the verifier to attest the shared checkout before review', () => {
+    const message = revisionMessage(revision)
+
+    expect(message).toContain(revision)
+    expect(message).toContain('Call revision_check')
+    expect(message).toContain('before any review starts')
   })
 
   it('keeps each reviewer inside its assigned scope', () => {
@@ -162,7 +177,10 @@ describe('simplification workflow', () => {
   })
 
   it('continues with a degraded result when one reviewer fails', async () => {
-    const agent = vi.fn(async (target: string, _input: AgentInput): Promise<AgentResult> => {
+    const agent = vi.fn(async (target: string, agentInput: AgentInput): Promise<AgentResult> => {
+      if (target === 'finding_verifier' && agentInput.message.includes('before any review starts'))
+        return { revision }
+
       if (target === 'test_reviewer')
         throw new Error('review failed')
 
@@ -205,7 +223,17 @@ describe('simplification workflow', () => {
       status: 'incomplete',
       limitations: ['Reviewer failed before returning a valid structured result: review failed'],
     })
-    expect(agent).toHaveBeenCalledTimes(5)
-    expect(agent.mock.calls[4]?.[1]?.message).toContain('Reviewer failed before returning a valid structured result: review failed')
+    expect(agent).toHaveBeenCalledTimes(6)
+    expect(agent.mock.calls[5]?.[1]?.message).toContain('Reviewer failed before returning a valid structured result: review failed')
+  })
+
+  it('stops before dispatching specialists when the checkout revision differs', async () => {
+    const checkoutRevision = 'b'.repeat(40)
+    const agent = vi.fn(async (): Promise<AgentResult> => ({ revision: checkoutRevision }))
+
+    await expect(runSimplificationSweep(input, { agent })).rejects.toThrow(
+      `Shared checkout revision ${checkoutRevision} does not match requested revision ${revision}.`,
+    )
+    expect(agent).toHaveBeenCalledOnce()
   })
 })

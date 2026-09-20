@@ -99,7 +99,7 @@ Call `simplification-sweep` with:
 - the four exact scopes;
 - every relevant rejected finding or maintainer decision from the ledger.
 
-The tool fans out to hidden read-only specialists:
+The tool first verifies that the shared checkout matches the supplied full commit SHA. A mismatch ends the run before any specialist starts. It then fans out to hidden read-only specialists:
 
 1. `code_simplifier`;
 2. `test_reviewer`;
