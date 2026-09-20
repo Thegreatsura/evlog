@@ -2,6 +2,7 @@ import { installAgentBrowser } from '@agent-browser/eve/sandbox'
 import { DefaultSandbox, defineSandbox } from 'eve/sandbox'
 import { browserSandbox } from './lib/capture'
 import { cloneUrl, homeRepository } from './lib/repo'
+import { workspaceBootstrapCommand } from './lib/workspace-bootstrap'
 
 /**
  * Kept for its diff engine, not for capture: capture__before_after owns
@@ -37,7 +38,7 @@ export const environment = DefaultSandbox.environment({
     // Frozen: a cold install in a fresh clone otherwise re-resolves the whole
     // graph, and any <48h transitive release then fails the template build on
     // the repo's own minimumReleaseAge policy. The lockfile is what CI tested.
-    await sandbox.run({ command: 'cd repo && corepack prepare --activate && pnpm install --frozen-lockfile && pnpm run dev:prepare' })
+    await sandbox.run({ command: workspaceBootstrapCommand })
     // The CLI at main, usable from any checkout in the sandbox.
     await sandbox.run({ command: 'ln -sf /workspace/repo/node_modules/.bin/evlog "$(npm prefix -g)/bin/evlog"' })
     // Prime the turbo cache on deployed builds only: locally this is minutes
