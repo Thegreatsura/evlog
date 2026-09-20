@@ -5,7 +5,7 @@ const expectedRevision = 'a'.repeat(40)
 
 describe('simplification checkout revision', () => {
   it('returns the current commit without changing the checkout', async () => {
-    const run = vi.fn(async () => ({ exitCode: 0, stdout: `${expectedRevision}\n` }))
+    const run = vi.fn(() => Promise.resolve({ exitCode: 0, stdout: `${expectedRevision}\n` }))
 
     await expect(verifyCheckoutRevision({ run }, expectedRevision)).resolves.toEqual({
       revision: expectedRevision,
@@ -17,7 +17,7 @@ describe('simplification checkout revision', () => {
 
   it('rejects a different checkout revision', async () => {
     const revision = 'b'.repeat(40)
-    const run = vi.fn(async () => ({ exitCode: 0, stdout: `${revision}\n` }))
+    const run = vi.fn(() => Promise.resolve({ exitCode: 0, stdout: `${revision}\n` }))
 
     await expect(verifyCheckoutRevision({ run }, expectedRevision)).rejects.toThrow(
       `Shared checkout revision ${revision} does not match requested revision ${expectedRevision}.`,
