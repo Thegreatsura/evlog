@@ -112,6 +112,8 @@ After all four settle, `finding_verifier` tries to disprove every candidate agai
 
 The workflow is review, not permission to edit. Call its survivors workflow-confirmed candidates until this section passes. Do not call them ready findings or pull-request findings.
 
+Immediately before parent verification, run `git rev-parse --verify HEAD^{commit}` and require the full SHA to equal the workflow's `revision`. If it differs, discard the result and rerun the workflow on the current checkout. In a real run, create each candidate branch from that exact reviewed revision before the first edit.
+
 A dry run still completes every read-only check in this section. It skips edits, ledger writes, issue creation, branches, pushes, and pull requests. Do not stop after the workflow result and describe the remaining verification as future work.
 
 For each confirmed finding:
@@ -140,6 +142,8 @@ A workflow-confirmed candidate marked `pull_request` becomes PR-ready only when 
 - `pnpm run lint`, `pnpm run typecheck`, `pnpm run test`, and affected content checks exit 0;
 - required changesets, skill updates, API snapshot review, and visual evidence are present;
 - the pull request body states the problem, change, preserved behavior, verification, and the reviewed revision.
+
+Immediately before pushing or opening the pull request, run `git merge-base HEAD <reviewed-revision>` and require the output to equal the full reviewed SHA. Inspect `git diff <reviewed-revision>...HEAD` and require it to contain only the verified candidate. If either check fails, do not deliver the branch; restart it from the reviewed revision.
 
 Open a normal, ready pull request, not a draft. Read CI once it settles and fix any failure before requesting review from `hugorcd`. If the branch cannot meet the readiness gate, do not open a half-finished pull request. Keep the result as a blocker or proposal in the report.
 

@@ -32,4 +32,12 @@ describe('authored skill frontmatter', () => {
       expect(`${skill}\n${schedule}`, name).toMatch(/ready PR/i)
     }
   })
+
+  it('binds sweep verification and delivery to the reviewed revision', () => {
+    const skill = readFileSync(join(import.meta.dirname, '..', 'skills', 'repo-health-sweep', 'SKILL.md'), 'utf8')
+
+    expect(skill).toContain('git rev-parse --verify HEAD^{commit}')
+    expect(skill).toContain('git merge-base HEAD <reviewed-revision>')
+    expect(skill).toContain('git diff <reviewed-revision>...HEAD')
+  })
 })
