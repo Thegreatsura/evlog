@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ESCALATION_LABEL, escalateFailedTriage, isAutonomousTriageState } from './escalate'
 
 vi.mock('./credentials', () => ({
-  githubCredentials: { installationToken: async () => 'tok_test' },
+  githubCredentialsFor: () => ({ installationToken: () => Promise.resolve('tok_test') }),
 }))
 
 afterEach(() => {
