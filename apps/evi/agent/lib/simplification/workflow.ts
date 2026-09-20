@@ -116,6 +116,7 @@ interface ReviewAssignment {
   scope: string
 }
 
+type FindingResult = z.infer<typeof findingResultSchema>
 type ReviewResult = z.infer<typeof reviewResultSchema> & Pick<ReviewAssignment, 'agent' | 'category'>
 type VerificationResult = z.infer<typeof verificationResultSchema>
 
@@ -161,6 +162,38 @@ export function verificationMessage(
     `Candidate reviews:\n${JSON.stringify(reviews)}`,
     'Use pull_request only for a mechanical, behavior-preserving change with enough evidence to implement and test without judgement. Use proposal for architectural decisions. Use question when evidence is incomplete.',
   ].join('\n\n')
+}
+
+export function validateVerificationCoverage(
+  reviews: readonly ReviewResult[],
+  verification: VerificationResult,
+): void {
+  const candidates = reviews.flatMap(review => review.findings)
+  const candidatesById = new Map<string, FindingResult>()
+
+  for (const candidate of candidates) {
+    if (candidatesById.has(candidate.id)) throw new Error(`Duplicate proposed finding id: ${candidate.id}.`)
+    candidatesById.set(candidate.id, candidate)
+  }
+
+  const verifiedIds = new Set<string>()
+  for (const verified of verification.findings) {
+    if (verifiedIds.has(verified.id)) throw new Error(`Duplicate verification result id: ${verified.id}.`)
+    verifiedIds.add(verified.id)
+
+    const candidate = candidatesById.get(verified.id)
+    if (!candidate) throw new Error(`Unknown verification result id: ${verified.id}.`)
+
+    for (const key of Object.keys(findingProperties) as Array<keyof FindingResult>) {
+      if (verified[key] !== candidate[key]) {
+        throw new Error(`Verification result ${verified.id} changed candidate field ${key}.`)
+      }
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (!verifiedIds.has(candidate.id)) throw new Error(`Missing verification result id: ${candidate.id}.`)
+  }
 }
 
 export function summarizeSimplificationSweep(
@@ -224,8 +257,7 @@ export async function runSimplificationSweep(
         }))
 
         return { agent: assignment.agent, category: assignment.category, ...review }
-      }
-      catch (error) {
+      } catch (error) {
         return {
           agent: assignment.agent,
           category: assignment.category,
@@ -243,6 +275,7 @@ export async function runSimplificationSweep(
     message: verificationMessage(checkout.revision, reviews, input.priorDecisions),
     outputSchema: verificationOutputSchema,
   }))
+  validateVerificationCoverage(reviews, verification)
 
   return {
     revision: checkout.revision,

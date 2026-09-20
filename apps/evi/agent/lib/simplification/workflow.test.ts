@@ -6,6 +6,7 @@ import {
   runSimplificationSweep,
   simplificationInputSchema,
   summarizeSimplificationSweep,
+  validateVerificationCoverage,
   verificationMessage,
 } from './workflow'
 
@@ -34,6 +35,23 @@ const input = {
   architectureScope: 'packages/evlog/src/adapters and packages/evlog/src/shared',
   communicationScope: 'agent/instructions.md and complete excerpt from PR #1',
   priorDecisions: [],
+}
+
+const review = {
+  agent: 'code_simplifier' as const,
+  category: 'code' as const,
+  scope: 'shared',
+  status: 'complete' as const,
+  limitations: [],
+  findings: [finding],
+  cleanAreas: [],
+}
+
+const verifiedFinding = {
+  ...finding,
+  verdict: 'confirmed' as const,
+  delivery: 'pull_request' as const,
+  verification: 'No counterexample found.',
 }
 
 describe('simplification workflow', () => {
@@ -105,15 +123,17 @@ describe('simplification workflow', () => {
   it('gives the verifier candidates, reviewer health, and prior decisions', () => {
     const message = verificationMessage(
       'abcdef0',
-      [{
-        agent: 'communication_reviewer',
-        category: 'communication',
-        scope: 'PR #1',
-        status: 'incomplete',
-        limitations: ['Comment body was truncated.'],
-        findings: [],
-        cleanAreas: [],
-      }],
+      [
+        {
+          agent: 'communication_reviewer',
+          category: 'communication',
+          scope: 'PR #1',
+          status: 'incomplete',
+          limitations: ['Comment body was truncated.'],
+          findings: [],
+          cleanAreas: [],
+        },
+      ],
       ['Do not combine framework entrypoints.'],
     )
 
@@ -176,33 +196,47 @@ describe('simplification workflow', () => {
     })
   })
 
+  it.each([
+    ['omitted', [], 'Missing verification result id: code-1.'],
+    ['duplicated', [verifiedFinding, verifiedFinding], 'Duplicate verification result id: code-1.'],
+    ['invented', [{ ...verifiedFinding, id: 'code-2' }], 'Unknown verification result id: code-2.'],
+    ['modified', [{ ...verifiedFinding, problem: 'Different problem' }], 'Verification result code-1 changed candidate field problem.'],
+  ])('rejects %s verification findings', (_case, findings, error) => {
+    expect(() => validateVerificationCoverage([review], {
+      findings,
+      summary: 'Checked.',
+    })).toThrow(error)
+  })
+
   it('continues with a degraded result when one reviewer fails', async () => {
-    const agent = vi.fn(async (target: string, agentInput: AgentInput): Promise<AgentResult> => {
+    const agent = vi.fn((target: string, agentInput: AgentInput): Promise<AgentResult> => {
       if (target === 'finding_verifier' && agentInput.message.includes('before any review starts'))
-        return { revision }
+        return Promise.resolve({ revision })
 
       if (target === 'test_reviewer')
         throw new Error('review failed')
 
       if (target === 'finding_verifier') {
-        return {
-          findings: [{
-            ...finding,
-            verdict: 'confirmed',
-            delivery: 'pull_request',
-            verification: 'No counterexample found.',
-          }],
+        return Promise.resolve({
+          findings: [
+            {
+              ...finding,
+              verdict: 'confirmed',
+              delivery: 'pull_request',
+              verification: 'No counterexample found.',
+            },
+          ],
           summary: 'One candidate survived.',
-        }
+        })
       }
 
-      return {
+      return Promise.resolve({
         scope: target,
         status: 'complete',
         limitations: [],
         findings: target === 'code_simplifier' ? [finding] : [],
         cleanAreas: [],
-      }
+      })
     })
 
     const result = await runSimplificationSweep(input, { agent })
@@ -229,7 +263,7 @@ describe('simplification workflow', () => {
 
   it('stops before dispatching specialists when the checkout revision differs', async () => {
     const checkoutRevision = 'b'.repeat(40)
-    const agent = vi.fn(async (): Promise<AgentResult> => ({ revision: checkoutRevision }))
+    const agent = vi.fn((): Promise<AgentResult> => Promise.resolve({ revision: checkoutRevision }))
 
     await expect(runSimplificationSweep(input, { agent })).rejects.toThrow(
       `Shared checkout revision ${checkoutRevision} does not match requested revision ${revision}.`,
