@@ -3,9 +3,9 @@ import { useLogger } from 'evlog/eve'
 import type { DynamicResolveContext } from 'eve/tools'
 import { defineDynamic, defineTool } from 'eve/tools'
 import { z } from 'zod'
-import { githubCredentials } from '../lib/github/credentials'
-import { isValidRefName, mintInstallationToken, pushBrokerPolicy, validatePushBranch } from '../lib/github/push'
-import { cloneUrl, homeRepository, parseRepository, repositorySlug } from '../lib/repo'
+import { repositoryToken } from '../lib/github/credentials'
+import { isValidRefName, pushBrokerPolicy, validatePushBranch } from '../lib/github/push'
+import { cloneUrl, homeRepository, parseRepository, type Repository, repositorySlug } from '../lib/repo'
 import { isMaintainer, isScheduleAppAuth } from '../lib/trust'
 import { checkoutDir, installCommand, REPO_DIR, runOutput } from '../lib/workspace'
 
@@ -15,6 +15,10 @@ function canShip(auth: SessionAuthContext | null): boolean {
 }
 
 const NOT_ALLOWED = 'Only maintainer and schedule-app sessions may use git over the network.'
+
+function notInstalled(repository: Repository): string {
+  return `evlogai is not installed on ${repository.owner}, so ${repositorySlug(repository)} is out of reach. Install the App on that account first.`
+}
 
 // Executes stay inline in the resolver (docs/notes.md).
 const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
@@ -34,9 +38,13 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
         if (repository === null) return { success: false as const, error: `"${input.repository}" is not an owner/repo slug.` }
         if (input.ref !== undefined && !isValidRefName(input.ref)) return { success: false as const, error: `"${input.ref}" is not a valid ref.` }
         const slug = repositorySlug(repository)
+        const token = await repositoryToken(repository)
+        if (token === null) {
+          log.set({ git: { checkout: { repository: slug, done: false, reason: 'not_installed' } } })
+          return { success: false as const, error: notInstalled(repository) }
+        }
         const dir = checkoutDir(repository)
         const sandbox = await toolCtx.getSandbox()
-        const token = await mintInstallationToken(githubCredentials)
         await sandbox.setNetworkPolicy(pushBrokerPolicy(token))
         try {
           const clone = await sandbox.run({ command: `test -d ${dir}/.git || (mkdir -p ${dir} && git clone --depth 50 ${cloneUrl(repository)} ${dir})` })
@@ -105,9 +113,13 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
           log.set({ git: { branch: input.branch, pushed: false, reason: 'refused' } })
           return { success: false as const, error: `"${input.repository}" is not an owner/repo slug.` }
         }
+        const token = await repositoryToken(repository)
+        if (token === null) {
+          log.set({ git: { branch: input.branch, pushed: false, reason: 'not_installed' } })
+          return { success: false as const, error: notInstalled(repository) }
+        }
         const dir = checkoutDir(repository)
         const sandbox = await toolCtx.getSandbox()
-        const token = await mintInstallationToken(githubCredentials)
         await sandbox.setNetworkPolicy(pushBrokerPolicy(token))
         try {
           // The URL is spelled out, never `origin`: remote config inside the

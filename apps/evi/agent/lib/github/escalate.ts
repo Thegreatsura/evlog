@@ -1,6 +1,6 @@
 import { type Repository, repositorySlug } from '../repo'
 import { MAINTAINER_GITHUB_LOGIN } from '../trust'
-import { githubCredentials } from './credentials'
+import { githubCredentialsFor } from './credentials'
 import { mintInstallationToken } from './push'
 
 const GITHUB_API = 'https://api.github.com'
@@ -29,7 +29,7 @@ export function isAutonomousTriageState(state: ChannelStateSlice): boolean {
  */
 export async function escalateFailedTriage(repository: Repository, issueNumber: number): Promise<void> {
   const slug = repositorySlug(repository)
-  const token = await mintInstallationToken(githubCredentials)
+  const token = await mintInstallationToken(githubCredentialsFor(repository))
   await ensureEscalationLabel(token, slug)
   await githubRequest(token, 'POST', `/repos/${slug}/issues/${issueNumber}/labels`, {
     labels: [ESCALATION_LABEL],
