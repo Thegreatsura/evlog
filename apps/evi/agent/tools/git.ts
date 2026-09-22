@@ -3,6 +3,7 @@ import { useLogger } from 'evlog/eve'
 import type { DynamicResolveContext } from 'eve/tools'
 import { defineDynamic, defineTool } from 'eve/tools'
 import { z } from 'zod'
+import { eviErrors, refusal, type ToolRefusal } from '../lib/errors'
 import { repositoryToken } from '../lib/github/credentials'
 import { isValidRefName, pushBrokerPolicy, validatePushBranch } from '../lib/github/push'
 import { cloneUrl, homeRepository, parseRepository, type Repository, repositorySlug } from '../lib/repo'
@@ -14,10 +15,16 @@ function canShip(auth: SessionAuthContext | null): boolean {
   return isMaintainer(auth) || isScheduleAppAuth(auth)
 }
 
-const NOT_ALLOWED = 'Only maintainer and schedule-app sessions may use git over the network.'
+function notAllowed(tool: string) {
+  return refusal(eviErrors.TOOL_NOT_AVAILABLE({ tool, message: 'Only maintainer and schedule-app sessions may use git over the network.' }))
+}
 
-function notInstalled(repository: Repository): string {
-  return `evlogai is not installed on ${repository.owner}, so ${repositorySlug(repository)} is out of reach. Install the App on that account first.`
+function notSlug(input: string) {
+  return refusal(eviErrors.INPUT_REFUSED({ message: `"${input}" is not an owner/repo slug.` }))
+}
+
+function notInstalled(repository: Repository) {
+  return refusal(eviErrors.GITHUB_NOT_INSTALLED({ owner: repository.owner, repository: repositorySlug(repository) }))
 }
 
 // Executes stay inline in the resolver (docs/notes.md).
@@ -32,16 +39,19 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
         ref: z.string().optional().describe('Branch or commit to check out'),
       }),
       async execute(input, toolCtx) {
-        if (!canShip(toolCtx.session.auth.current)) return { success: false as const, error: NOT_ALLOWED }
+        if (!canShip(toolCtx.session.auth.current)) return notAllowed('git__checkout')
         const log = useLogger(toolCtx)
         const repository = parseRepository(input.repository)
-        if (repository === null) return { success: false as const, error: `"${input.repository}" is not an owner/repo slug.` }
-        if (input.ref !== undefined && !isValidRefName(input.ref)) return { success: false as const, error: `"${input.ref}" is not a valid ref.` }
+        if (repository === null) return notSlug(input.repository)
+        if (input.ref !== undefined && !isValidRefName(input.ref)) {
+          return refusal(eviErrors.INPUT_REFUSED({ message: `"${input.ref}" is not a valid ref.` }))
+        }
         const slug = repositorySlug(repository)
         const token = await repositoryToken(repository)
         if (token === null) {
-          log.set({ git: { checkout: { repository: slug, done: false, reason: 'not_installed' } } })
-          return { success: false as const, error: notInstalled(repository) }
+          const refused = notInstalled(repository)
+          log.set({ git: { checkout: { repository: slug, done: false, reason: refused.code } } })
+          return refused
         }
         const dir = checkoutDir(repository)
         const sandbox = await toolCtx.getSandbox()
@@ -49,20 +59,23 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
         try {
           const clone = await sandbox.run({ command: `test -d ${dir}/.git || (mkdir -p ${dir} && git clone --depth 50 ${cloneUrl(repository)} ${dir})` })
           if (clone.exitCode !== 0) {
-            log.set({ git: { checkout: { repository: slug, done: false, reason: `exit_${clone.exitCode}` } } })
-            return { success: false as const, error: `git clone exited ${clone.exitCode}: ${runOutput(clone)}` }
+            const refused = refusal(eviErrors.GIT_COMMAND_FAILED({ command: 'clone', exitCode: clone.exitCode, message: `git clone exited ${clone.exitCode}: ${runOutput(clone)}` }))
+            log.set({ git: { checkout: { repository: slug, done: false, reason: refused.code, exitCode: clone.exitCode } } })
+            return refused
           }
           if (input.ref !== undefined) {
             const checkout = await sandbox.run({ command: `git -C ${dir} fetch --depth 50 origin '${input.ref}' && git -C ${dir} checkout --detach FETCH_HEAD` })
             if (checkout.exitCode !== 0) {
-              log.set({ git: { checkout: { repository: slug, done: false, reason: `exit_${checkout.exitCode}` } } })
-              return { success: false as const, error: `git checkout exited ${checkout.exitCode}: ${runOutput(checkout)}` }
+              const refused = refusal(eviErrors.GIT_COMMAND_FAILED({ command: 'checkout', exitCode: checkout.exitCode, message: `git checkout exited ${checkout.exitCode}: ${runOutput(checkout)}` }))
+              log.set({ git: { checkout: { repository: slug, done: false, reason: refused.code, exitCode: checkout.exitCode } } })
+              return refused
             }
           }
           const head = await sandbox.run({ command: `git -C ${dir} rev-parse --verify HEAD` })
           if (head.exitCode !== 0) {
-            log.set({ git: { checkout: { repository: slug, done: false, reason: 'no_commits' } } })
-            return { success: false as const, error: `${slug} has no commits to check out.` }
+            const refused = refusal(eviErrors.GIT_NO_COMMITS({ repository: slug }))
+            log.set({ git: { checkout: { repository: slug, done: false, reason: refused.code } } })
+            return refused
           }
           const sha = String(head.stdout).trim()
           log.set({ git: { checkout: { repository: slug, done: true, sha } } })
@@ -78,17 +91,18 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
         repository: z.string().min(1).describe('owner/repo already checked out'),
       }),
       async execute(input, toolCtx) {
-        if (!canShip(toolCtx.session.auth.current)) return { success: false as const, error: NOT_ALLOWED }
+        if (!canShip(toolCtx.session.auth.current)) return notAllowed('git__install')
         const log = useLogger(toolCtx)
         const repository = parseRepository(input.repository)
-        if (repository === null) return { success: false as const, error: `"${input.repository}" is not an owner/repo slug.` }
+        if (repository === null) return notSlug(input.repository)
         const slug = repositorySlug(repository)
         const dir = checkoutDir(repository)
         const sandbox = await toolCtx.getSandbox()
         const install = await sandbox.run({ command: installCommand(dir) })
         if (install.exitCode !== 0) {
-          log.set({ git: { install: { repository: slug, done: false, reason: `exit_${install.exitCode}` } } })
-          return { success: false as const, error: `install exited ${install.exitCode}: ${runOutput(install)}` }
+          const refused = refusal(eviErrors.INSTALL_FAILED({ exitCode: install.exitCode, message: `install exited ${install.exitCode}: ${runOutput(install)}` }))
+          log.set({ git: { install: { repository: slug, done: false, reason: refused.code, exitCode: install.exitCode } } })
+          return refused
         }
         log.set({ git: { install: { repository: slug, done: true } } })
         return { success: true as const, repository: slug, path: dir }
@@ -101,23 +115,24 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
         repository: z.string().optional().describe(`owner/repo to push to; defaults to ${home}`),
       }),
       async execute(input, toolCtx) {
-        if (!canShip(toolCtx.session.auth.current)) return { success: false as const, error: NOT_ALLOWED }
+        if (!canShip(toolCtx.session.auth.current)) return notAllowed('git__push')
         const log = useLogger(toolCtx)
-        const refusal = validatePushBranch(input.branch)
-        if (refusal) {
-          log.set({ git: { branch: input.branch, pushed: false, reason: 'refused' } })
-          return { success: false as const, error: refusal }
+        const refuse = (refused: ToolRefusal) => {
+          log.set({ git: { branch: input.branch, pushed: false, reason: refused.code } })
+          return refused
         }
-        const repository = input.repository === undefined ? homeRepository() : parseRepository(input.repository)
-        if (repository === null) {
-          log.set({ git: { branch: input.branch, pushed: false, reason: 'refused' } })
-          return { success: false as const, error: `"${input.repository}" is not an owner/repo slug.` }
+        const reason = validatePushBranch(input.branch)
+        if (reason) return refuse(refusal(eviErrors.GIT_PUSH_REFUSED({ message: reason })))
+        let repository: Repository
+        if (input.repository === undefined) {
+          repository = homeRepository()
+        } else {
+          const parsed = parseRepository(input.repository)
+          if (parsed === null) return refuse(notSlug(input.repository))
+          repository = parsed
         }
         const token = await repositoryToken(repository)
-        if (token === null) {
-          log.set({ git: { branch: input.branch, pushed: false, reason: 'not_installed' } })
-          return { success: false as const, error: notInstalled(repository) }
-        }
+        if (token === null) return refuse(notInstalled(repository))
         const dir = checkoutDir(repository)
         const sandbox = await toolCtx.getSandbox()
         await sandbox.setNetworkPolicy(pushBrokerPolicy(token))
@@ -128,8 +143,9 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
             command: `git -C ${dir} push ${cloneUrl(repository)} 'refs/heads/${input.branch}:refs/heads/${input.branch}'`,
           })
           if (push.exitCode !== 0) {
-            log.set({ git: { branch: input.branch, pushed: false, reason: `exit_${push.exitCode}` } })
-            return { success: false as const, error: `git push exited ${push.exitCode}: ${runOutput(push)}` }
+            const refused = refusal(eviErrors.GIT_COMMAND_FAILED({ command: 'push', exitCode: push.exitCode, message: `git push exited ${push.exitCode}: ${runOutput(push)}` }))
+            log.set({ git: { branch: input.branch, pushed: false, reason: refused.code, exitCode: push.exitCode } })
+            return refused
           }
           const head = await sandbox.run({ command: `git -C ${dir} rev-parse '${input.branch}'` })
           const sha = String(head.stdout).trim()

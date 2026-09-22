@@ -1,6 +1,7 @@
 import { useLogger } from 'evlog/eve'
 import { defineDynamic, defineTool } from 'eve/tools'
 import { z } from 'zod'
+import { eviErrors, refusal } from '../lib/errors'
 import { defaultReportTag, reportQuery, scopedReport } from '../lib/gateway'
 import { canAccessAdminTools } from '../lib/trust'
 
@@ -9,7 +10,7 @@ const FETCH_TIMEOUT_MS = 10_000
 
 function apiKey(): string {
   const key = process.env.AI_GATEWAY_API_KEY?.trim()
-  if (!key) throw new Error('AI_GATEWAY_API_KEY is not configured')
+  if (!key) throw eviErrors.AI_GATEWAY_NOT_CONFIGURED()
   return key
 }
 
@@ -23,9 +24,13 @@ async function gatewayFetch(path: string, params: Record<string, string | undefi
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   })
   if (!response.ok) {
-    throw new Error(`AI Gateway API error (${response.status}): ${await response.text()}`)
+    throw eviErrors.AI_GATEWAY_REQUEST_FAILED({ responseStatus: response.status, internal: { body: await response.text() } })
   }
   return await response.json()
+}
+
+function notAvailable(tool: string) {
+  return refusal(eviErrors.TOOL_NOT_AVAILABLE({ tool, message: 'AI Gateway reporting is not available in this session.' }))
 }
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
@@ -41,9 +46,7 @@ export default defineDynamic({
           description: 'Admin: AI Gateway credit balance and lifetime spend for the entire team account (not Evi-scoped). Prefer ai_gateway__report for Evi digests.',
           inputSchema: z.object({}),
           async execute(_input, toolCtx) {
-            if (!canAccessAdminTools(toolCtx.session.auth.current)) {
-              return { success: false as const, error: 'AI Gateway reporting is not available in this session.' }
-            }
+            if (!canAccessAdminTools(toolCtx.session.auth.current)) return notAvailable('ai_gateway__credits')
             return await gatewayFetch('/credits')
           },
         }),
@@ -65,9 +68,7 @@ export default defineDynamic({
             path: ['startDate'],
           }),
           async execute(input, toolCtx) {
-            if (!canAccessAdminTools(toolCtx.session.auth.current)) {
-              return { success: false as const, error: 'AI Gateway reporting is not available in this session.' }
-            }
+            if (!canAccessAdminTools(toolCtx.session.auth.current)) return notAvailable('ai_gateway__report')
             const query = reportQuery(input)
             const payload = await gatewayFetch('/report', {
               start_date: input.startDate,
@@ -100,9 +101,7 @@ export default defineDynamic({
             id: z.string().min(1).describe('Generation id, e.g. gen_01ARZ3NDEKTSV4RRFFQ69G5FAV'),
           }),
           async execute(input, toolCtx) {
-            if (!canAccessAdminTools(toolCtx.session.auth.current)) {
-              return { success: false as const, error: 'AI Gateway reporting is not available in this session.' }
-            }
+            if (!canAccessAdminTools(toolCtx.session.auth.current)) return notAvailable('ai_gateway__generation')
             return await gatewayFetch('/generation', { id: input.id })
           },
         }),

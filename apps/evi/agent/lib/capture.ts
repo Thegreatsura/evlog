@@ -1,3 +1,5 @@
+import { eviErrors } from './errors'
+
 /**
  * Single source of truth for where the browser — and any capture — may go:
  * evlog's own surfaces, Vercel previews, and sandbox-local dev servers. The
@@ -88,7 +90,7 @@ export function resolveTargetExpression(target: CaptureTarget): string {
 export function readTargetProbe(envelope: unknown): TargetProbe {
   const data = (envelope as { data?: unknown } | null | undefined)?.data
   if (data === null || typeof data !== 'object') {
-    throw new Error('The browser returned no target probe. The page did not load, or the expression failed.')
+    throw eviErrors.CAPTURE_PROBE_MISSING()
   }
   const probe = data as Record<string, unknown>
   const strings = (value: unknown): string[] =>

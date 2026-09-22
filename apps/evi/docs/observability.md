@@ -18,16 +18,56 @@ Tool executes enrich the same event with their outcome, in the pattern
 `tools/memory.ts` set: one namespace per domain, holding counts, reason codes,
 and identifiers Evi authored. Never raw error strings, tool payloads, or
 untrusted URLs, so the metadata-only PostHog policy holds. The namespaces:
-`git.{branch,pushed,sha,reason}`, `git.checkout.{repository,done,sha,reason}`, `git.install.{repository,done,reason}`,
+`git.{branch,pushed,sha,reason,exitCode}`, `git.checkout.{repository,done,sha,reason,exitCode}`, `git.install.{repository,done,reason,exitCode}`,
 `capture.{published,viewport,target,beforeHost,afterHost,reason}`,
-`blob.{uploaded,bytes}`, `turbo.{remoteCache,reason}`,
+`blob.{uploaded,bytes,reason}`, `turbo.{remoteCache,reason}`,
+`vercel.{env,key,project,target,reason,status}`,
 `gateway.report.{mode,groupBy,matchedRows}`,
-`content.{scanned,candidates,eligible,targets,group,surface}`,
-`image.{host,fetched,bytes,mediaType}`, and
+`content.{scanned,candidates,eligible,targets,group,surface,reason}`,
+`image.{host,fetched,bytes,mediaType,reason}`, and
 `memory.{saved,refused,searched,hits}`. A content pass that held everything or
 a push that was refused is chartable from the turn event alone. Tool executes
 are the one place `useLogger()` is contractually bound (see the caller gap
-below), which is why hooks, schedules, and the subagents stay uninstrumented.
+below); hooks and the subagents stay uninstrumented, and the two pieces of
+work that run outside a turn emit their own events (below).
+
+## Errors
+
+Every failure Evi authors comes from the catalog in `agent/lib/errors.ts`
+(`defineErrorCatalog('evi', …)`), so a `reason` field is always a catalog code
+(`evi.GITHUB_NOT_INSTALLED`, `evi.GIT_COMMAND_FAILED`, …) and never an ad-hoc
+string. A tool refuses through `refusal(eviErrors.X(...))`, which returns
+`{ success: false, code, error }`: the model reads `error` (message plus the
+entry's `fix`), the turn event records `code` under the tool's namespace.
+Messages are Evi's own words; a third-party response body goes to `internal`,
+which `EvlogError` keeps out of `toJSON` and so out of every tool result.
+`log.error(error)` is a different path: it serializes the error's getters,
+`internal` included, so an out-of-turn handler records the message and code,
+never the error object. One more rule the types do not enforce: a templated
+param must not be named like an override (`status`, `message`, `fix`, ...),
+because the factory strips those before templating.
+
+What the catalog does not do today: reach eve's failure events. `turn.failed`
+carries the code of the harness failure that ended the turn
+(`MODEL_CALL_FAILED`, `EVENT_HANDLER_FAILED`, …), and a tool that throws is
+reduced to `error.message` on its way to the model and to `ai.tools[].error`
+(`createRuntimeToolResultFromToolError` in eve's harness). So a thrown catalog
+error is visible as text, not as a code, which is why the tools return
+refusals instead of throwing wherever the failure is theirs to report. The
+`_Error code:` line in `lib/failure.ts` prints eve's code, not Evi's. Proposal
+for eve below.
+
+## Out-of-turn events
+
+Two pieces of work run with no turn to attach to: the silent escalation of a
+failed autonomous triage (`lib/github/escalate.ts`) and the cron handoff into
+Slack (`lib/schedule.ts`). Both emit one wide event through `jobLogger()`
+(`agent/lib/job.ts`), which is evlog's global logger with a `job` field
+(`github.escalate`, `schedule.send`). `agent/hooks/evlog.ts` gives that global
+logger its own drain, the same fs and PostHog destinations as the turns but
+under the `evi_job` event name, so a chart of turns never counts a cron
+handoff. Turn events bypass the global drain (`_deferDrain`), so nothing is
+delivered twice.
 
 `environment` comes from `agent/lib/environment.ts`, the same function that
 builds the gateway spend tags. That is deliberate: a run that bills as `eval`
@@ -132,6 +172,17 @@ delta split across the tools that fed the model.
 
 Landed (#622): the deployment that served the call is on the event as
 `ai.provider`.
+
+### eve: preserve a thrown error's `code` on tool results and `turn.failed`
+
+A tool that throws an error carrying `code` (evlog's `EvlogError`, any
+`Error` subclass with the field) loses it at the harness boundary:
+`createRuntimeToolResultFromToolError` keeps `message` only, and
+`turn.failed` carries the harness's own code. Keeping `code` on the runtime
+tool result (and `details.code` on the failure events) would let `evlog/eve`
+record it on `ai.tools[]`, and let a channel's failure comment print the
+application's code rather than `EVENT_HANDLER_FAILED`. Until then, Evi's
+catalog is visible through refusal results and `reason` fields only.
 
 ### github-tools: surface GitHub rate-limit state on tool results
 
