@@ -1,3 +1,6 @@
+import { EvlogError } from 'evlog'
+import { eviErrors } from '../errors'
+import { jobLogger } from '../job'
 import { type Repository, repositorySlug } from '../repo'
 import { MAINTAINER_GITHUB_LOGIN } from '../trust'
 import { githubCredentialsFor } from './credentials'
@@ -39,6 +42,23 @@ export async function escalateFailedTriage(repository: Repository, issueNumber: 
   })
 }
 
+/**
+ * Escalation from a failure handler. A second failure is recorded as a job
+ * event and never thrown, so a triage failure cannot become a failure loop.
+ */
+export async function escalateFailedTriageQuietly(repository: Repository, issueNumber: number): Promise<void> {
+  const log = jobLogger('github.escalate', { repository: repositorySlug(repository), issue: issueNumber })
+  try {
+    await escalateFailedTriage(repository, issueNumber)
+    log.set({ escalated: true })
+  } catch (error) {
+    // Message and code only: `log.error(error)` would serialize `internal`, and the GitHub body belongs in no drain.
+    const code = EvlogError.isEvlogError(error) ? error.code : undefined
+    log.error((error as Error).message, { escalated: false, ...(code ? { reason: code } : {}) })
+  }
+  log.emit()
+}
+
 async function ensureEscalationLabel(token: string, slug: string): Promise<void> {
   const existing = await fetch(
     `${GITHUB_API}/repos/${slug}/labels/${encodeURIComponent(ESCALATION_LABEL)}`,
@@ -46,7 +66,7 @@ async function ensureEscalationLabel(token: string, slug: string): Promise<void>
   )
   if (existing.ok) return
   if (existing.status !== 404) {
-    throw new Error(`GitHub label lookup failed (${existing.status}): ${await existing.text()}`)
+    throw eviErrors.GITHUB_REQUEST_FAILED({ request: 'label lookup', responseStatus: existing.status, internal: { body: await existing.text() } })
   }
   const created = await fetch(`${GITHUB_API}/repos/${slug}/labels`, {
     method: 'POST',
@@ -61,7 +81,7 @@ async function ensureEscalationLabel(token: string, slug: string): Promise<void>
     const body = await created.text()
     // already_exists: another session created it between the lookup and here.
     if (created.status === 422 && body.includes('"already_exists"')) return
-    throw new Error(`GitHub label creation failed (${created.status}): ${body}`)
+    throw eviErrors.GITHUB_REQUEST_FAILED({ request: 'label creation', responseStatus: created.status, internal: { body } })
   }
 }
 
@@ -72,7 +92,7 @@ async function githubRequest(token: string, method: string, path: string, body: 
     body: JSON.stringify(body),
   })
   if (!response.ok) {
-    throw new Error(`GitHub ${method} ${path} failed (${response.status}): ${await response.text()}`)
+    throw eviErrors.GITHUB_REQUEST_FAILED({ request: `${method} ${path}`, responseStatus: response.status, internal: { body: await response.text() } })
   }
 }
 

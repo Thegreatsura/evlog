@@ -1,3 +1,5 @@
+import { eviErrors } from './errors'
+
 /** A GitHub repository, as the API and the channel state address it. */
 export interface Repository {
   readonly owner: string
@@ -25,7 +27,7 @@ export function parseRepository(slug: string): Repository | null {
 export function homeRepository(): Repository {
   const slug = process.env.EVI_REPOSITORY ?? DEFAULT_HOME
   const repository = parseRepository(slug)
-  if (repository === null) throw new Error(`EVI_REPOSITORY must be an owner/repo slug, got "${slug}".`)
+  if (repository === null) throw eviErrors.REPOSITORY_SLUG_INVALID({ slug })
   return repository
 }
 

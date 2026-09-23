@@ -1,7 +1,9 @@
 import { getToken } from '@vercel/connect'
+import type { EvlogError } from 'evlog'
 import { useLogger } from 'evlog/eve'
 import { defineDynamic, defineTool } from 'eve/tools'
 import { z } from 'zod'
+import { eviErrors, refusal } from '../lib/errors'
 import { canAccessAdminTools } from '../lib/trust'
 import { decideEnvVarWrite } from '../lib/vercel-env'
 
@@ -46,11 +48,16 @@ export default defineDynamic({
             // approval: reaching execute means either the policy auto-
             // approved or a human answered the card, so only a denial
             // (secret-shaped key) still blocks here.
+            const log = useLogger(toolCtx)
+            const refuse = (error: EvlogError, fields: Record<string, unknown> = {}) => {
+              const refused = refusal(error)
+              log.set({ vercel: { env: false, reason: refused.code, ...fields } })
+              return refused
+            }
             const decision = decideEnvVarWrite({ projectId: input.projectId, key: input.key })
             if (decision !== 'not-applicable' && decision !== 'user-approval' && decision.type === 'denied') {
-              return { success: false as const, error: decision.reason }
+              return refuse(eviErrors.VERCEL_ENV_DENIED({ message: decision.reason }))
             }
-            const log = useLogger(toolCtx)
             const path = VERCEL_TEAM_ID
               ? `/v10/projects/${ encodeURIComponent(input.projectId) }/env?upsert=true&teamId=${ encodeURIComponent(VERCEL_TEAM_ID) }`
               : `/v10/projects/${ encodeURIComponent(input.projectId) }/env?upsert=true`
@@ -58,8 +65,9 @@ export default defineDynamic({
             try {
               token = await connectToken()
             } catch (error) {
-              log.set({ vercel: { env: false, reason: 'no_connect_token' } })
-              return { success: false as const, error: `No Vercel Connect token available: ${error instanceof Error ? error.message : String(error)}` }
+              return refuse(eviErrors.VERCEL_NO_CONNECT_TOKEN({
+                message: `No Vercel Connect token available: ${error instanceof Error ? error.message : String(error)}`,
+              }))
             }
             // The value lives in the request body only: it never reaches the
             // log metadata or the tool result.
@@ -70,11 +78,13 @@ export default defineDynamic({
               signal: AbortSignal.timeout(10_000),
             })
             if (!response.ok) {
-              log.set({ vercel: { env: false, reason: `api_${response.status}` } })
               // Error bodies never echo variable values; still capped, and
               // the value itself never enters the error path.
               const body = (await response.text()).slice(0, 400)
-              return { success: false as const, error: `The Vercel API returned ${response.status}: ${body}` }
+              return refuse(
+                eviErrors.VERCEL_REQUEST_FAILED({ responseStatus: response.status, message: `The Vercel API returned ${response.status}: ${body}` }),
+                { status: response.status },
+              )
             }
             log.set({ vercel: { env: true, key: input.key, project: input.projectId, target: input.target } })
             return {
