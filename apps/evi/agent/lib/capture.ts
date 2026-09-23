@@ -1,3 +1,6 @@
+import type { EveSandboxSession, EveToolContext } from '@agent-browser/eve/sandbox'
+import type { SandboxSession } from 'eve/sandbox'
+
 /**
  * Single source of truth for where the browser — and any capture — may go:
  * evlog's own surfaces, Vercel previews, and sandbox-local dev servers. The
@@ -193,6 +196,20 @@ interface AttestationInput {
 /** Human-readable receipt embedded under the comparison table. */
 export function captureAttestation(input: AttestationInput): string {
   return `captured by agent-browser · ${markdownUrl(input.beforeUrl)} → ${markdownUrl(input.afterUrl)} · ${input.viewport} · ${escapeInline(input.frame)} · ${input.capturedAt}`
+}
+
+/**
+ * agent-browser still expects the pre-0.64 eve session shape, an `id` beside
+ * `run`; it only uses the id to name the browser session, so any stable
+ * string stands in.
+ */
+export function browserSandbox(sandbox: Pick<SandboxSession, 'run'>, id: string): EveSandboxSession {
+  return { id, run: options => sandbox.run(options) }
+}
+
+export function browserContext(sandbox: Pick<SandboxSession, 'run'>, id: string): EveToolContext {
+  const session = browserSandbox(sandbox, id)
+  return { getSandbox: () => Promise.resolve(session) }
 }
 
 /** The finished markdown block: table, caption, attestation receipt. */

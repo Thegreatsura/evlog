@@ -4,7 +4,7 @@ import type { DynamicResolveContext } from 'eve/tools'
 import { defineDynamic, defineTool } from 'eve/tools'
 import { z } from 'zod'
 import { repositoryToken } from '../lib/github/credentials'
-import { isValidRefName, pushBrokerPolicy, validatePushBranch } from '../lib/github/push'
+import { brokeredSandbox, isValidRefName, pushBrokerPolicy, validatePushBranch } from '../lib/github/push'
 import { cloneUrl, homeRepository, parseRepository, type Repository, repositorySlug } from '../lib/repo'
 import { isMaintainer, isScheduleAppAuth } from '../lib/trust'
 import { checkoutDir, installCommand, REPO_DIR, runOutput } from '../lib/workspace'
@@ -44,7 +44,7 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
           return { success: false as const, error: notInstalled(repository) }
         }
         const dir = checkoutDir(repository)
-        const sandbox = await toolCtx.getSandbox()
+        const sandbox = brokeredSandbox(await toolCtx.getSandbox())
         await sandbox.setNetworkPolicy(pushBrokerPolicy(token))
         try {
           const clone = await sandbox.run({ command: `test -d ${dir}/.git || (mkdir -p ${dir} && git clone --depth 50 ${cloneUrl(repository)} ${dir})` })
@@ -119,7 +119,7 @@ const resolveGitTools = (_event: unknown, ctx: DynamicResolveContext) => {
           return { success: false as const, error: notInstalled(repository) }
         }
         const dir = checkoutDir(repository)
-        const sandbox = await toolCtx.getSandbox()
+        const sandbox = brokeredSandbox(await toolCtx.getSandbox())
         await sandbox.setNetworkPolicy(pushBrokerPolicy(token))
         try {
           // The URL is spelled out, never `origin`: remote config inside the

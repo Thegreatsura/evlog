@@ -70,8 +70,8 @@ and `content_rewrite` exist as separate subagents because a reviewer that can
 edit talks itself into changes it cannot justify, and a writer that has read the
 review's reasoning rewrites to that reasoning instead of to the page. The
 conversation isolation keeps the roles separate. `agent/lib/content-sandbox.ts`
-explicitly selects `parent.sandbox` through eve's callback API, so both agents
-read the parent's branch and uncommitted pages without cloning another checkout.
+declares `defineParentSandbox()`, so both agents read the parent's branch and
+uncommitted pages without cloning another checkout.
 They must not add sandbox seeds or packaged skills, which eve disallows for a
 shared workspace. The parent captures a page identity with `content_snapshot`;
 the child uses `content_load` to verify its digest and source commit. Both tools

@@ -1,5 +1,5 @@
 import type { GitHubChannelCredentials } from 'eve/channels/github'
-import type { SandboxNetworkPolicy } from 'eve/sandbox'
+import type { SandboxNetworkPolicy, SandboxSession } from 'eve/sandbox'
 
 const PROTECTED_BRANCHES = new Set(['main', 'master'])
 
@@ -48,6 +48,20 @@ export function pushBrokerPolicy(installationToken: string): SandboxNetworkPolic
       '*': [],
     },
   }
+}
+
+type NetworkPolicyCapable = Required<Pick<SandboxSession, 'setNetworkPolicy'>>
+
+function hasNetworkPolicy<TSandbox extends Pick<SandboxSession, 'setNetworkPolicy'>>(sandbox: TSandbox): sandbox is TSandbox & NetworkPolicyCapable {
+  return sandbox.setNetworkPolicy !== undefined
+}
+
+/** The broker injects the credential at the firewall; eve only promises one on providers with mutable networking. */
+export function brokeredSandbox<TSandbox extends Pick<SandboxSession, 'setNetworkPolicy'>>(sandbox: TSandbox): TSandbox & NetworkPolicyCapable {
+  if (!hasNetworkPolicy(sandbox)) {
+    throw new Error('This sandbox provider has no network policy, so the GitHub credential cannot be brokered into it.')
+  }
+  return sandbox
 }
 
 /** Resolves the Connect-managed installation token, minting when it is lazy. */
