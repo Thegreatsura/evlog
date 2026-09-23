@@ -3,9 +3,10 @@
 `eve` is pinned exactly because each release rotates the extension tool contract, and eve refuses a
 mounted extension whose manifest requires a dropped contract (the build then fails with
 `Selected module binding "extensions/<name>.ts" has no compile or runtime usage`). eve 0.64.1
-accepts contract 54; both tarballs here are built against it. When bumping eve, rebuild both against
-the same version and check every extension manifest (`dist/extension/_manifest.json`) against
-`EXTENSION_CAPABILITY_CONTRACTS` in `eve/dist/src/compiler/extension-compatibility.js`.
+accepts contract 54; the tarball here is built against it, and `@github-tools/eve-extension` 0.7.4 on
+the registry is too. When bumping eve, rebuild the tarball against the same version and check every
+extension manifest (`dist/extension/_manifest.json`) against `EXTENSION_CAPABILITY_CONTRACTS` in
+`eve/dist/src/compiler/extension-compatibility.js`.
 
 ## `agent-browser-eve-0.38.1-eve0.64.1.tgz`
 
@@ -28,13 +29,3 @@ pnpm -C packages/@agent-browser/eve pack
 
 Remove this file and point `@agent-browser/eve` back at the registry once upstream publishes a
 release built against eve 0.64 or newer.
-
-## `github-tools-eve-extension-0.7.3-eve0.64.1.tgz`
-
-`@github-tools/eve-extension` 0.7.3 source rebuilt against eve 0.64.1 (the published 0.7.3 was built
-against 0.63.0 and requires contract 53). Reproduce from
-[vercel-labs/github-tools](https://github.com/vercel-labs/github-tools) with `eve` set to `0.64.1` in
-`packages/github-tools/package.json` and `packages/github-tools-eve-extension/package.json`, then
-`pnpm build:packages` and `pnpm -C packages/github-tools-eve-extension pack`.
-
-Remove this file and point `@github-tools/eve-extension` back at the registry once 0.7.4 is published.

@@ -136,8 +136,8 @@ importers:
         specifier: file:./vendor/agent-browser-eve-0.38.1-eve0.64.1.tgz
         version: file:apps/evi/vendor/agent-browser-eve-0.38.1-eve0.64.1.tgz(eve@0.64.1(@opentelemetry/api@1.9.1)(ai@7.0.107(zod@4.6.2))(microsandbox@0.6.18))
       '@github-tools/eve-extension':
-        specifier: file:./vendor/github-tools-eve-extension-0.7.3-eve0.64.1.tgz
-        version: file:apps/evi/vendor/github-tools-eve-extension-0.7.3-eve0.64.1.tgz(bd685257739abcdc4b25afb8d7ffadeb)
+        specifier: 0.7.4
+        version: 0.7.4(bd685257739abcdc4b25afb8d7ffadeb)
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -2717,9 +2717,8 @@ packages:
   '@floating-ui/vue@1.1.11':
     resolution: {integrity: sha512-HzHKCNVxnGS35r9fCHBc3+uCnjw9IWIlCPL683cGgM9Kgj2BiAl8x1mS7vtvP6F9S/e/q4O6MApwSHj8hNLGfw==}
 
-  '@github-tools/eve-extension@file:apps/evi/vendor/github-tools-eve-extension-0.7.3-eve0.64.1.tgz':
-    resolution: {integrity: sha512-UN5MjVD45RXO4TpL6ood1i5NLxpwQntzGIuPJQFDWNP8ISzKjcR6DR+acMghlfrWo74XWV/Rr6rQuZGwIQGYxw==, tarball: file:apps/evi/vendor/github-tools-eve-extension-0.7.3-eve0.64.1.tgz}
-    version: 0.7.3
+  '@github-tools/eve-extension@0.7.4':
+    resolution: {integrity: sha512-dbT7w0pTO5hHk9A9YWAU+ZhjaFBuXgMbtcX3DjcLxau2yUsItfxG04DxOGKXMqz2Ezg6fFcgN+lOdDjamuU9Ug==}
     engines: {node: '>=24'}
     peerDependencies:
       '@vercel/connect': '>=0.3.2'
@@ -18621,7 +18620,7 @@ snapshots:
       - '@vue/composition-api'
       - vue
 
-  '@github-tools/eve-extension@file:apps/evi/vendor/github-tools-eve-extension-0.7.3-eve0.64.1.tgz(bd685257739abcdc4b25afb8d7ffadeb)':
+  '@github-tools/eve-extension@0.7.4(bd685257739abcdc4b25afb8d7ffadeb)':
     dependencies:
       '@github-tools/sdk': 1.16.1(02b39d32d0e7ac1fad586b2ae1a4bb6c)
       eve: 0.64.1(@opentelemetry/api@1.9.1)(ai@7.0.107(zod@4.6.2))(microsandbox@0.6.18)
