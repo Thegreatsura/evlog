@@ -26,6 +26,9 @@ export const eviErrors = defineErrorCatalog('evi', {
     message: ({ request, responseStatus }: { request: string, responseStatus: number }) => `GitHub ${request} failed (${responseStatus})`,
   },
   GIT_PUSH_REFUSED: { status: 403, message: 'The branch may not be pushed.' },
+  GIT_BROKER_UNAVAILABLE: {
+    message: 'This sandbox provider has no network policy, so the GitHub credential cannot be brokered into it.',
+  },
   GIT_COMMAND_FAILED: {
     message: ({ command, exitCode }: { command: string, exitCode: number }) => `git ${command} exited ${exitCode}`,
   },
@@ -83,7 +86,6 @@ export const eviErrors = defineErrorCatalog('evi', {
     status: 409,
     message: 'Page or source revision changed since review. Capture and review it again.',
   },
-  CONTENT_PARENT_WORKSPACE_REQUIRED: { message: 'Content agents require a parent workspace.' },
 
   SLACK_CHANNEL_NOT_CONFIGURED: {
     message: 'EVI_SLACK_CHANNEL_ID is required for scheduled runs.',

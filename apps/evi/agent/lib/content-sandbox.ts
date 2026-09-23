@@ -1,7 +1,4 @@
-import { defineSandbox } from 'eve/sandbox'
-import { eviErrors } from './errors'
+import { defineParentSandbox } from 'eve/sandbox'
 
-export default defineSandbox(({ parent }) => {
-  if (parent === null) throw eviErrors.CONTENT_PARENT_WORKSPACE_REQUIRED()
-  return parent.sandbox
-})
+/** Both content agents read the parent's branch and uncommitted pages; a clone of main would miss them. */
+export default defineParentSandbox()

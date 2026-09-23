@@ -4,7 +4,7 @@ import { useLogger } from 'evlog/eve'
 import { defineDynamic, defineTool } from 'eve/tools'
 import { z } from 'zod'
 import { missingBlobTokenError, uploadSandboxImage } from '../lib/blob'
-import { CAPTURE_MARK, CAPTURE_SETTLE_MS, CAPTURE_VIEWPORTS, captureMarkdown, describeTarget, readTargetProbe, resolveTargetExpression, sensitiveCaptureReason, unresolvedTargetMessage, validateCaptureUrl, type CaptureTarget, type CaptureViewport } from '../lib/capture'
+import { browserContext, CAPTURE_MARK, CAPTURE_SETTLE_MS, CAPTURE_VIEWPORTS, captureMarkdown, describeTarget, readTargetProbe, resolveTargetExpression, sensitiveCaptureReason, unresolvedTargetMessage, validateCaptureUrl, type CaptureTarget, type CaptureViewport } from '../lib/capture'
 import { eviErrors, refusal } from '../lib/errors'
 import { canAccessAdminTools } from '../lib/trust'
 
@@ -93,8 +93,9 @@ export default defineDynamic({
               : null
             const sandbox = await toolCtx.getSandbox()
             await sandbox.run({ command: `mkdir -p ${SCREENSHOT_DIR}` })
-            const before = await captureFrame(toolCtx, { side: 'before', url: input.beforeUrl, target, viewport })
-            const after = await captureFrame(toolCtx, { side: 'after', url: input.afterUrl, target, viewport })
+            const browser = browserContext(sandbox, toolCtx.session.id)
+            const before = await captureFrame(browser, { side: 'before', url: input.beforeUrl, target, viewport })
+            const after = await captureFrame(browser, { side: 'after', url: input.afterUrl, target, viewport })
             const beforeUpload = await uploadSandboxImage(sandbox, before.path)
             if ('error' in beforeUpload) return refuse(eviErrors.BLOB_UPLOAD_FAILED({ message: beforeUpload.error }))
             const afterUpload = await uploadSandboxImage(sandbox, after.path)
