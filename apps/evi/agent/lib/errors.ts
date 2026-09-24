@@ -55,7 +55,10 @@ export const eviErrors = defineErrorCatalog('evi', {
     message: ({ responseStatus }: { responseStatus: number }) => `The Vercel API returned ${responseStatus}`,
   },
 
-  AI_GATEWAY_NOT_CONFIGURED: { message: 'AI_GATEWAY_API_KEY is not configured', fix: 'Set AI_GATEWAY_API_KEY on the deployment.' },
+  AI_GATEWAY_NOT_CONFIGURED: {
+    message: 'No AI Gateway credential: AI_GATEWAY_API_KEY is unset and no Vercel OIDC token is available.',
+    fix: 'Run on the Vercel deployment, run `vercel env pull` locally, or set AI_GATEWAY_API_KEY.',
+  },
   AI_GATEWAY_REQUEST_FAILED: {
     status: 502,
     message: ({ responseStatus }: { responseStatus: number }) => `AI Gateway API error (${responseStatus})`,
