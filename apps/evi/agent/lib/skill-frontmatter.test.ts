@@ -19,4 +19,25 @@ describe('authored skill frontmatter', () => {
       expect(parsed.description, file).toBeTruthy()
     }
   })
+
+  it('keeps scheduled autonomous pull requests out of draft state', () => {
+    const agentDir = join(import.meta.dirname, '..')
+    const skillNames = ['content-pass', 'repo-health-sweep', 'self-review', 'upstream-sync']
+
+    for (const name of skillNames) {
+      const skill = readFileSync(join(agentDir, 'skills', name, 'SKILL.md'), 'utf8')
+      const schedule = readFileSync(join(agentDir, 'schedules', `${name}.ts`), 'utf8')
+      expect(skill, name).not.toMatch(/draft PR/i)
+      expect(schedule, name).not.toMatch(/draft PR/i)
+      expect(`${skill}\n${schedule}`, name).toMatch(/ready PR/i)
+    }
+  })
+
+  it('binds sweep verification and delivery to the reviewed revision', () => {
+    const skill = readFileSync(join(import.meta.dirname, '..', 'skills', 'repo-health-sweep', 'SKILL.md'), 'utf8')
+
+    expect(skill).toContain('git rev-parse --verify HEAD^{commit}')
+    expect(skill).toContain('git merge-base HEAD <reviewed-revision>')
+    expect(skill).toContain('git diff <reviewed-revision>...HEAD')
+  })
 })
