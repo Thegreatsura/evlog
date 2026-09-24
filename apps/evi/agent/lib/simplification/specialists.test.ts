@@ -1,6 +1,6 @@
-import type { SandboxParentValue } from 'eve/sandbox'
 import { isDisabledToolSentinel } from 'eve/tools'
 import { describe, expect, it } from 'vitest'
+import reviewSandbox from '../review-sandbox'
 import architectureAgent from '../../subagents/architecture_reviewer/agent'
 import architectureSandbox from '../../subagents/architecture_reviewer/sandbox/sandbox'
 import architectureShell from '../../subagents/architecture_reviewer/tools/bash'
@@ -35,10 +35,8 @@ describe.each(specialists)('%s simplification specialist', (_name, agent, sandbo
     expect(agent.tool).toBe(false)
   })
 
-  it('reads the parent workspace', async () => {
-    const sandbox = {} as SandboxParentValue
-    expect(await sandboxDefinition({ parent: { sandbox } })).toBe(sandbox)
-    expect(() => sandboxDefinition({ parent: null })).toThrow('parent')
+  it('inherits the parent workspace', () => {
+    expect(sandboxDefinition).toBe(reviewSandbox)
   })
 
   it('has no shell or file-write tool', () => {
