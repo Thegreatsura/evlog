@@ -1,12 +1,14 @@
 import type { WorkflowToolContext } from 'eve/tools'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  assembleVerification,
+  assignFindingIds,
+  parseStructuredResult,
   reviewMessage,
   revisionMessage,
   runSimplificationSweep,
   simplificationInputSchema,
   summarizeSimplificationSweep,
-  validateVerificationCoverage,
   verificationMessage,
 } from './workflow'
 
@@ -143,6 +145,7 @@ describe('simplification workflow', () => {
     expect(message).toContain('pull_request only for a mechanical')
     expect(message).toContain('Reject a test removal unless another cited test covers the same behavior')
     expect(message).toContain('Never confirm a finding based on an incomplete review')
+    expect(message).toContain('Return one verdict per candidate id')
     expect(message).toContain('Comment body was truncated.')
   })
 
@@ -180,7 +183,6 @@ describe('simplification workflow', () => {
             verification: 'The existing structure is deliberate.',
           },
         ],
-        summary: 'One candidate survived.',
       },
     )
 
@@ -196,16 +198,46 @@ describe('simplification workflow', () => {
     })
   })
 
-  it.each([
-    ['omitted', [], 'Missing verification result id: code-1.'],
-    ['duplicated', [verifiedFinding, verifiedFinding], 'Duplicate verification result id: code-1.'],
-    ['invented', [{ ...verifiedFinding, id: 'code-2' }], 'Unknown verification result id: code-2.'],
-    ['modified', [{ ...verifiedFinding, problem: 'Different problem' }], 'Verification result code-1 changed candidate field problem.'],
-  ])('rejects %s verification findings', (_case, findings, error) => {
-    expect(() => validateVerificationCoverage([review], {
-      findings,
+  it('assigns finding ids in code so reviewers cannot collide', () => {
+    const [identified] = assignFindingIds([{ ...review, findings: [{ ...finding, id: 'F1' }, { ...finding, id: 'F1' }] }])
+
+    expect(identified?.findings.map(candidate => candidate.id)).toEqual(['code-1', 'code-2'])
+  })
+
+  it('keeps candidate fields and records a gap when a verdict is missing', () => {
+    const assembled = assembleVerification([review], {
+      findings: [{ id: 'code-2', verdict: 'confirmed', delivery: 'pull_request', verification: 'Invented.' }],
       summary: 'Checked.',
-    })).toThrow(error)
+    })
+
+    expect(assembled.findings).toEqual([
+      {
+        ...finding,
+        verdict: 'question',
+        delivery: 'question',
+        verification: 'The verifier returned no verdict for this candidate.',
+      },
+    ])
+    expect(assembled.limitations).toEqual([
+      'Unknown verification result id: code-2.',
+      'Missing verification result id: code-1.',
+    ])
+  })
+
+  it('recovers a structured result embedded in prose', () => {
+    const parsed = parseStructuredResult(
+      simplificationInputSchema.pick({ revision: true }),
+      `The checkout matches.\n{"revision":"${revision}"}`,
+    )
+
+    expect(parsed).toEqual({ revision })
+  })
+
+  it('rejects prose that carries no structured result', () => {
+    expect(() => parseStructuredResult(
+      simplificationInputSchema.pick({ revision: true }),
+      'No structured result was produced.',
+    )).toThrow('Expected a structured result, received text:')
   })
 
   it('continues with a degraded result when one reviewer fails', async () => {
@@ -259,6 +291,41 @@ describe('simplification workflow', () => {
     })
     expect(agent).toHaveBeenCalledTimes(6)
     expect(agent.mock.calls[5]?.[1]?.message).toContain('Reviewer failed before returning a valid structured result: review failed')
+  })
+
+  it('degrades instead of failing when verification returns prose', async () => {
+    const agent = vi.fn((target: string, agentInput: AgentInput): Promise<AgentResult> => {
+      if (target === 'finding_verifier' && agentInput.message.includes('before any review starts'))
+        return Promise.resolve({ revision })
+
+      if (target === 'finding_verifier')
+        return Promise.resolve('Verification complete, but no structured result was produced.')
+
+      return Promise.resolve({
+        scope: target,
+        status: 'complete',
+        limitations: [],
+        findings: target === 'code_simplifier' ? [{ ...finding, id: 'F1' }] : [],
+        cleanAreas: [],
+      })
+    })
+
+    const result = await runSimplificationSweep(input, { agent })
+
+    expect(result.status).toBe('degraded')
+    expect(result.verification.findings).toEqual([
+      expect.objectContaining({
+        id: 'code-1',
+        problem: finding.problem,
+        verdict: 'question',
+        delivery: 'question',
+      }),
+    ])
+    expect(result.reviewers).toContainEqual(expect.objectContaining({
+      agent: 'code_simplifier',
+      status: 'incomplete',
+      limitations: [expect.stringContaining('Expected a structured result, received text:')],
+    }))
   })
 
   it('stops before dispatching specialists when the checkout revision differs', async () => {

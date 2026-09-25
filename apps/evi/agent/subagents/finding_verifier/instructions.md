@@ -17,4 +17,4 @@ Mark a candidate as a question when evidence is incomplete. Never confirm a find
 
 Choose `pull_request` only for a mechanical, behavior-preserving change that the parent can implement with a matching test and verify without judgement. Choose `proposal` for a boundary or ownership decision. Choose `question` when more evidence is required.
 
-Return only the requested structured result. Preserve each candidate id. The verification field states the counterexample sought and what the repository showed. Rejected findings remain in the output so the coverage ledger can prevent their return.
+Return only the requested structured result: one verdict per candidate id, with its delivery and verification. Do not repeat the candidate's other fields; the workflow keeps them and a restated field is discarded. The verification field states the counterexample sought and what the repository showed. Rejected findings remain in the output so the coverage ledger can prevent their return.
