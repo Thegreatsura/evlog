@@ -66,15 +66,17 @@ const reviewResultSchema = z.object({
   cleanAreas: z.array(z.string()),
 })
 
+const verdictProperties = {
+  id: { type: 'string' },
+  verdict: { type: 'string', enum: ['confirmed', 'rejected', 'question'] },
+  delivery: { type: 'string', enum: ['pull_request', 'proposal', 'question'] },
+  verification: { type: 'string' },
+} as const
+
 const verifiedFindingSchema = {
   type: 'object',
-  properties: {
-    ...findingProperties,
-    verdict: { type: 'string', enum: ['confirmed', 'rejected', 'question'] },
-    delivery: { type: 'string', enum: ['pull_request', 'proposal', 'question'] },
-    verification: { type: 'string' },
-  },
-  required: [...Object.keys(findingProperties), 'verdict', 'delivery', 'verification'],
+  properties: verdictProperties,
+  required: Object.keys(verdictProperties),
   additionalProperties: false,
 } as const
 
@@ -101,12 +103,15 @@ const revisionOutputSchema = {
   additionalProperties: false,
 } as const
 
+const verdictResultSchema = z.object({
+  id: z.string(),
+  verdict: z.enum(['confirmed', 'rejected', 'question']),
+  delivery: z.enum(['pull_request', 'proposal', 'question']),
+  verification: z.string(),
+})
+
 const verificationResultSchema = z.object({
-  findings: z.array(findingResultSchema.extend({
-    verdict: z.enum(['confirmed', 'rejected', 'question']),
-    delivery: z.enum(['pull_request', 'proposal', 'question']),
-    verification: z.string(),
-  })),
+  findings: z.array(verdictResultSchema),
   summary: z.string(),
 })
 
@@ -118,7 +123,31 @@ interface ReviewAssignment {
 
 type FindingResult = z.infer<typeof findingResultSchema>
 type ReviewResult = z.infer<typeof reviewResultSchema> & Pick<ReviewAssignment, 'agent' | 'category'>
+type VerdictResult = z.infer<typeof verdictResultSchema>
 type VerificationResult = z.infer<typeof verificationResultSchema>
+type VerifiedFinding = FindingResult & Omit<VerdictResult, 'id'>
+
+/**
+ * A subagent under a schedule can settle with prose when background tasks are
+ * still pending, even though an output schema was requested. Recover the
+ * structured result when the prose carries one; otherwise fail the parse.
+ */
+export function parseStructuredResult<T>(schema: z.ZodType<T>, output: unknown): T {
+  if (typeof output === 'string') {
+    const start = output.indexOf('{')
+    const end = output.lastIndexOf('}')
+    if (start !== -1 && end > start) {
+      try {
+        return schema.parse(JSON.parse(output.slice(start, end + 1)))
+      } catch {
+        // The prose did not carry a valid result; report the original output below.
+      }
+    }
+    throw new Error(`Expected a structured result, received text: ${output.slice(0, 200)}`)
+  }
+
+  return schema.parse(output)
+}
 
 export function reviewMessage(
   revision: string,
@@ -161,44 +190,75 @@ export function verificationMessage(
     `Prior decisions:\n${priorDecisions.length === 0 ? '_None._' : priorDecisions.join('\n')}`,
     `Candidate reviews:\n${JSON.stringify(reviews)}`,
     'Use pull_request only for a mechanical, behavior-preserving change with enough evidence to implement and test without judgement. Use proposal for architectural decisions. Use question when evidence is incomplete.',
+    'Return one verdict per candidate id and nothing else. Do not repeat the candidate fields; the workflow keeps them.',
   ].join('\n\n')
 }
 
-export function validateVerificationCoverage(
+export function assignFindingIds(reviews: readonly ReviewResult[]): ReviewResult[] {
+  const counts = new Map<string, number>()
+
+  return reviews.map(review => ({
+    ...review,
+    findings: review.findings.map((finding) => {
+      const count = (counts.get(review.category) ?? 0) + 1
+      counts.set(review.category, count)
+      return { ...finding, id: `${review.category}-${count}` }
+    }),
+  }))
+}
+
+export function assembleVerification(
   reviews: readonly ReviewResult[],
   verification: VerificationResult,
-): void {
+): { findings: VerifiedFinding[], summary: string, limitations: string[] } {
   const candidates = reviews.flatMap(review => review.findings)
-  const candidatesById = new Map<string, FindingResult>()
+  const candidatesById = new Map(candidates.map(candidate => [candidate.id, candidate]))
+  const verdictsById = new Map<string, VerdictResult>()
+  const limitations: string[] = []
 
-  for (const candidate of candidates) {
-    if (candidatesById.has(candidate.id)) throw new Error(`Duplicate proposed finding id: ${candidate.id}.`)
-    candidatesById.set(candidate.id, candidate)
+  for (const verdict of verification.findings) {
+    if (verdictsById.has(verdict.id)) {
+      limitations.push(`Duplicate verification result id: ${verdict.id}.`)
+      continue
+    }
+    if (!candidatesById.has(verdict.id)) {
+      limitations.push(`Unknown verification result id: ${verdict.id}.`)
+      continue
+    }
+    verdictsById.set(verdict.id, verdict)
   }
 
-  const verifiedIds = new Set<string>()
-  for (const verified of verification.findings) {
-    if (verifiedIds.has(verified.id)) throw new Error(`Duplicate verification result id: ${verified.id}.`)
-    verifiedIds.add(verified.id)
-
-    const candidate = candidatesById.get(verified.id)
-    if (!candidate) throw new Error(`Unknown verification result id: ${verified.id}.`)
-
-    for (const key of Object.keys(findingProperties) as Array<keyof FindingResult>) {
-      if (verified[key] !== candidate[key]) {
-        throw new Error(`Verification result ${verified.id} changed candidate field ${key}.`)
+  const findings = candidates.map((candidate) => {
+    const verdict = verdictsById.get(candidate.id)
+    if (!verdict) {
+      limitations.push(`Missing verification result id: ${candidate.id}.`)
+      return {
+        ...candidate,
+        verdict: 'question' as const,
+        delivery: 'question' as const,
+        verification: 'The verifier returned no verdict for this candidate.',
       }
     }
-  }
 
-  for (const candidate of candidates) {
-    if (!verifiedIds.has(candidate.id)) throw new Error(`Missing verification result id: ${candidate.id}.`)
-  }
+    return { ...candidate, verdict: verdict.verdict, delivery: verdict.delivery, verification: verdict.verification }
+  })
+
+  return { findings, summary: verification.summary, limitations }
+}
+
+function recordVerificationGap(reviews: ReviewResult[], limitations: readonly string[]) {
+  if (limitations.length === 0) return
+
+  const review = reviews.find(candidate => candidate.findings.length > 0) ?? reviews[0]
+  if (!review) return
+
+  review.status = 'incomplete'
+  review.limitations.push(...limitations)
 }
 
 export function summarizeSimplificationSweep(
   reviews: readonly ReviewResult[],
-  verification: VerificationResult,
+  verification: { findings: readonly VerifiedFinding[] },
 ) {
   const proposed = reviews.reduce((count, review) => count + review.findings.length, 0)
   const confirmed = verification.findings.filter(finding => finding.verdict === 'confirmed')
@@ -233,7 +293,7 @@ export async function runSimplificationSweep(
 ) {
   'use workflow'
 
-  const checkout = revisionResultSchema.parse(await ctx.agent('finding_verifier', {
+  const checkout = parseStructuredResult(revisionResultSchema, await ctx.agent('finding_verifier', {
     message: revisionMessage(input.revision),
     outputSchema: revisionOutputSchema,
   }))
@@ -251,7 +311,7 @@ export async function runSimplificationSweep(
   const reviews = await Promise.all(
     assignments.map(async (assignment): Promise<ReviewResult> => {
       try {
-        const review = reviewResultSchema.parse(await ctx.agent(assignment.agent, {
+        const review = parseStructuredResult(reviewResultSchema, await ctx.agent(assignment.agent, {
           message: reviewMessage(checkout.revision, assignment, input.priorDecisions),
           outputSchema: reviewOutputSchema,
         }))
@@ -271,16 +331,34 @@ export async function runSimplificationSweep(
     }),
   )
 
-  const verification = verificationResultSchema.parse(await ctx.agent('finding_verifier', {
-    message: verificationMessage(checkout.revision, reviews, input.priorDecisions),
-    outputSchema: verificationOutputSchema,
-  }))
-  validateVerificationCoverage(reviews, verification)
+  const identified = assignFindingIds(reviews)
+
+  let verification: { findings: VerifiedFinding[], summary: string }
+  try {
+    const verdicts = parseStructuredResult(verificationResultSchema, await ctx.agent('finding_verifier', {
+      message: verificationMessage(checkout.revision, identified, input.priorDecisions),
+      outputSchema: verificationOutputSchema,
+    }))
+    const assembled = assembleVerification(identified, verdicts)
+    verification = assembled
+    recordVerificationGap(identified, assembled.limitations)
+  } catch (error) {
+    verification = {
+      findings: identified.flatMap(review => review.findings).map(finding => ({
+        ...finding,
+        verdict: 'question' as const,
+        delivery: 'question' as const,
+        verification: 'Verification did not return a usable result.',
+      })),
+      summary: 'Verification failed before returning a usable result.',
+    }
+    recordVerificationGap(identified, [`Verification failed before returning a usable result: ${error instanceof Error ? error.message : String(error)}`])
+  }
 
   return {
     revision: checkout.revision,
-    reviews,
+    reviews: identified,
     verification,
-    ...summarizeSimplificationSweep(reviews, verification),
+    ...summarizeSimplificationSweep(identified, verification),
   }
 }

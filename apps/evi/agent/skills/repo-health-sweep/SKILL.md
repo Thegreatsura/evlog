@@ -106,7 +106,7 @@ The tool first verifies that the shared checkout matches the supplied full commi
 3. `architecture_reviewer`;
 4. `communication_reviewer`.
 
-After all four settle, `finding_verifier` tries to disprove every candidate against the same checkout. The workflow returns reviewer status, limitations, programmatic counts, confirmed findings, rejected findings, and open questions. Read `status`, `reviewers`, and `counts` before the findings. A `degraded` run has missing evidence and cannot produce a pull-request-ready finding. A `recovered` run may proceed, but the final report names the recovered failure. Copy counts from the result; never count finding IDs in prose. Do not bypass verification or ask the root model to recreate a failed specialist's report from memory.
+After all four settle, `finding_verifier` tries to disprove every candidate against the same checkout. The workflow assigns finding ids and keeps the candidate fields itself; the verifier returns a verdict, delivery, and verification per id. The workflow returns reviewer status, limitations, programmatic counts, confirmed findings, rejected findings, and open questions. Read `status`, `reviewers`, and `counts` before the findings. A `degraded` run has missing evidence and cannot produce a pull-request-ready finding. A verification that returns no usable result degrades the run and marks every candidate as a question rather than failing the sweep. A `recovered` run may proceed, but the final report names the recovered failure. Copy counts from the result; never count finding IDs in prose. Do not bypass verification or ask the root model to recreate a failed specialist's report from memory.
 
 ## 5. Verify confirmed findings
 
