@@ -34,8 +34,9 @@ Recent examples: `feat(loki): add the Grafana Loki drain adapter`, `feat(clickho
 | 9 | `skills/review-logging-patterns/SKILL.md` | Add adapter row in the Drain Adapters table + frontmatter description |
 | 10 | `.changeset/{name}-adapter.md` | Create changeset (`minor`) describing the adapter |
 | 11 | `.github/workflows/semantic-pull-request.yml` + `.github/pull_request_template.md` | Register `{name}` as a PR scope in both files |
+| 12 | `.agents/skills/create-adapter/references/upstream-alignment.md` | Add the adapter's row: ingest docs URL, official client repo and package, the file that builds the request, `Aligned to` set to the client version you read while writing the adapter |
 
-**Important**: Do NOT consider the task complete until all 11 touchpoints have been addressed.
+**Important**: Do NOT consider the task complete until all 12 touchpoints have been addressed.
 
 ## Naming Conventions
 
