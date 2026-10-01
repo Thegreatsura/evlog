@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   assembleVerification,
   assignFindingIds,
+  batchPullRequestCandidates,
   parseStructuredResult,
   reviewMessage,
   revisionMessage,
@@ -35,6 +36,7 @@ const replied = (data: unknown): Reply => ({ data })
 const finding = {
   id: 'code-1',
   category: 'code' as const,
+  kind: 'remove' as const,
   path: 'packages/evlog/src/shared/compose.ts',
   lines: '10-14',
   problem: 'Duplicate guard',
@@ -115,6 +117,19 @@ describe('simplification workflow', () => {
     expect(message).toContain('status complete')
   })
 
+  it('asks reviewers to clarify as well as remove, with both texts quoted', () => {
+    const message = reviewMessage(
+      'abcdef0',
+      { agent: 'code_simplifier', category: 'code', scope: 'packages/evlog/src/adapters' },
+      [],
+    )
+
+    expect(message).toContain('remove, deduplicate, or clarify')
+    expect(message).toContain('set kind to remove, dedupe, or clarify')
+    expect(message).toContain('quotes both the current text and the proposed text')
+    expect(message).toContain('a clarify finding without a named ambiguity is taste')
+  })
+
   it('sets a higher evidence bar for removing tests', () => {
     const message = reviewMessage(
       'abcdef0',
@@ -164,6 +179,8 @@ describe('simplification workflow', () => {
     expect(message).toContain('Never confirm a finding based on an incomplete review')
     expect(message).toContain('Return one verdict per candidate id')
     expect(message).toContain('Comment body was truncated.')
+    expect(message).toContain('A clarify candidate quotes current and proposed text')
+    expect(message).toContain('resolves the ambiguity the reviewer named')
   })
 
   it('derives run status and counts from structured results', () => {
@@ -211,8 +228,57 @@ describe('simplification workflow', () => {
       rejected: 1,
       questions: 0,
       pullRequestCandidates: 1,
+      pullRequestBatches: 1,
       proposals: 0,
     })
+    expect(summary.pullRequestBatches).toEqual([
+      { kind: 'remove', area: 'packages/evlog/src/shared', findingIds: ['code-1'] },
+    ])
+  })
+
+  it('batches confirmed pull-request candidates by kind and directory', () => {
+    const adapters = 'packages/evlog/src/adapters'
+    const batches = batchPullRequestCandidates([
+      { ...verifiedFinding, id: 'code-1', kind: 'clarify', path: `${adapters}/sentry.ts` },
+      { ...verifiedFinding, id: 'code-2', kind: 'remove', path: `${adapters}/datadog.ts` },
+      { ...verifiedFinding, id: 'code-3', kind: 'clarify', path: `${adapters}/posthog.ts` },
+      { ...verifiedFinding, id: 'code-4', kind: 'clarify', path: 'packages/evlog/src/shared/compose.ts' },
+      { ...verifiedFinding, id: 'code-5', kind: 'clarify', path: `${adapters}/loki.ts`, delivery: 'proposal' },
+      { ...verifiedFinding, id: 'code-6', kind: 'clarify', path: `${adapters}/axiom.ts`, verdict: 'rejected' },
+    ])
+
+    expect(batches).toEqual([
+      { kind: 'clarify', area: adapters, findingIds: ['code-1', 'code-3'] },
+      { kind: 'remove', area: adapters, findingIds: ['code-2'] },
+      { kind: 'clarify', area: 'packages/evlog/src/shared', findingIds: ['code-4'] },
+    ])
+  })
+
+  it('rejects a finding without a kind', async () => {
+    const { ctx } = agentSessions((target, message) => {
+      if (target === 'finding_verifier' && message.includes('before any review starts'))
+        return replied({ revision })
+
+      if (target === 'finding_verifier')
+        return replied({ findings: [], summary: 'Nothing to verify.' })
+
+      const { kind: _kind, ...withoutKind } = finding
+      return replied({
+        scope: target,
+        status: 'complete',
+        limitations: [],
+        findings: target === 'code_simplifier' ? [withoutKind] : [],
+        cleanAreas: [],
+      })
+    })
+
+    const result = await runSimplificationSweep(input, ctx)
+
+    expect(result.reviewers).toContainEqual(expect.objectContaining({
+      agent: 'code_simplifier',
+      status: 'incomplete',
+      limitations: [expect.stringContaining('Reviewer failed before returning a valid structured result')],
+    }))
   })
 
   it('assigns finding ids in code so reviewers cannot collide', () => {
@@ -298,6 +364,7 @@ describe('simplification workflow', () => {
       rejected: 0,
       questions: 0,
       pullRequestCandidates: 1,
+      pullRequestBatches: 1,
       proposals: 0,
     })
     expect(result.reviewers).toContainEqual({
