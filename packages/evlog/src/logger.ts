@@ -305,17 +305,10 @@ function emitWideEvent(
     markGloballyRedacted(formatted)
   }
 
-  if (!state.silent) {
-    if (state.pretty) {
-      prettyPrintWideEvent(formatted)
-    } else if (state.stringify) {
-      console[getConsoleMethod(level)](JSON.stringify(formatted))
-    } else {
-      console[getConsoleMethod(level)](formatted)
-    }
-  }
-
+  // A runner that defers the drain also owns the console write: it happens
+  // after enrichers, so stdout carries the same event drains receive.
   if (!deferDrain) {
+    outputWideEvent(formatted)
     publishWideEvent(formatted)
 
     const drainPromises: Array<Promise<unknown>> = []
@@ -339,6 +332,22 @@ function emitWideEvent(
   }
 
   return formatted
+}
+
+/**
+ * Write an emitted wide event to the console, honoring `silent`, `pretty` and
+ * `stringify`. Runners call it once enrichers have run.
+ * @internal
+ */
+export function outputWideEvent(event: WideEvent): void {
+  if (state.silent) return
+  if (state.pretty) {
+    prettyPrintWideEvent(event)
+  } else if (state.stringify) {
+    console[getConsoleMethod(event.level)](JSON.stringify(event))
+  } else {
+    console[getConsoleMethod(event.level)](event)
+  }
 }
 
 function emitTaggedLog(level: LogLevel, tag: string, message: string): void {
@@ -1068,13 +1077,13 @@ export function createLogger<T extends object = Record<string, unknown>>(initial
       }
     },
 
-    emit(overrides?: FieldContext<T> & { _forceKeep?: boolean }): WideEvent | null {
+    emit(overrides?: FieldContext<T> & { _forceKeep?: boolean, _durationMs?: number }): WideEvent | null {
       if (emitted) {
         warnPostEmit('log.emit()', 'Ignoring duplicate emit.')
         return null
       }
 
-      const durationMs = elapsedMs(startTime)
+      const durationMs = overrides?._durationMs ?? elapsedMs(startTime)
       const level: LogLevel = manualLevel ?? (hasFatal ? 'fatal' : hasError ? 'error' : hasWarn ? 'warn' : 'info')
 
       let forceKeep = false
@@ -1103,7 +1112,7 @@ export function createLogger<T extends object = Record<string, unknown>>(initial
       if (overrides) {
         const obj = overrides as Record<string, unknown>
         for (const key in obj) {
-          if (key !== '_forceKeep') context[key] = obj[key]
+          if (key !== '_forceKeep' && key !== '_durationMs') context[key] = obj[key]
         }
       }
       context.durationMs = durationMs
