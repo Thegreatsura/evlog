@@ -222,6 +222,30 @@ export const cliErrors = defineErrorCatalog('cli', {
     fix: 'Pass a whole number between 0 and 100, e.g. --min-score 80',
     tags: ['map'],
   },
+  MAP_INVALID_FORMAT: {
+    status: 400,
+    message: ({ value }: { value: string }) =>
+      `Unknown --format "${value}"`,
+    why: 'map renders human, json and github (workflow annotations)',
+    fix: 'Pass one of: human, json, github',
+    tags: ['map'],
+  },
+  MAP_INVALID_LIMIT: {
+    status: 400,
+    message: ({ value }: { value: string }) =>
+      `Invalid --limit "${value}"`,
+    why: 'The limit caps how many annotations reach the pull request, and a cap that cannot be read would silently become the default',
+    fix: 'Pass a whole number of 1 or more, e.g. --limit 10',
+    tags: ['map'],
+  },
+  MAP_FORMAT_CONFLICT: {
+    status: 400,
+    message: ({ format }: { format: string }) =>
+      `--json and --format ${format} both claim stdout`,
+    why: 'Each format is a different contract on stdout, and a consumer can only parse one of them',
+    fix: 'Drop --json, or pass --format json',
+    tags: ['map'],
+  },
 })
 
 declare module 'evlog' {

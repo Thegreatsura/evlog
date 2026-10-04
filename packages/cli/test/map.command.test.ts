@@ -1,19 +1,19 @@
 import { existsSync } from 'node:fs'
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { runCommand } from 'citty'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { version } from '../package.json'
 import map, { formatMapReport, runMap } from '../src/commands/map'
 import type { MapResult } from '../src/commands/map'
+import type { MapFile, RouteEntry } from '../src/lib/map/types'
 import { createContext } from '../src/core/context'
 import type { CliContext } from '../src/core/context'
 import { SCHEMA_VERSION } from '../src/core/output'
 import { resolveCliEnvironment } from '../src/lib/environment'
 import { MIN_WIDTH, formatMapInspect } from '../src/lib/map/report'
 import { REQUIREMENTS, RULE_SET_VERSION } from '../src/lib/map/rules/index'
-import type { RouteEntry } from '../src/lib/map/types'
 
 const FIXTURES = join(import.meta.dirname, 'map/fixtures')
 
@@ -413,5 +413,120 @@ describe('map command', () => {
     await runCommand(map, { rawArgs: ['--cwd', cwd, '--json', '--no-header', '--no-write'] })
 
     expect(process.exitCode).toBeUndefined()
+  })
+})
+
+describe('map --format', () => {
+  /* The runner sets GITHUB_WORKSPACE, which rebases every path; these tests
+     pin it so they read the same on CI as locally. */
+  beforeEach(() => vi.stubEnv('GITHUB_WORKSPACE', ''))
+  afterEach(() => vi.unstubAllEnvs())
+
+  function captureStdout(): string[] {
+    const out: string[] = []
+    vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: string | Uint8Array) => {
+      out.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString())
+      return true
+    }) as typeof process.stdout.write)
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    return out
+  }
+
+  it('github: one warning per failing requirement and a notice with the score', async () => {
+    const cwd = join(FIXTURES, 'hono-basic')
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--format', 'github', '--no-header', '--no-write'] })
+
+    const lines = out.join('').trim().split('\n')
+    expect(lines.filter(line => line.startsWith('::warning file=src/health.ts,line=5,title=evlog map%3A wide-event::'))).toHaveLength(1)
+    expect(lines.some(line => line.startsWith('::error'))).toBe(false)
+    expect(lines.at(-1)).toMatch(/^::notice title=evlog map::score \d+\/100 \(/)
+    expect(process.exitCode).toBeUndefined()
+  })
+
+  it('github: without a baseline, the warnings follow the FIX FIRST order and stop at --limit', async () => {
+    const cwd = join(FIXTURES, 'nuxt-basic')
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--format', 'github', '--limit', '2', '--no-header', '--no-write'] })
+
+    const lines = out.join('').trim().split('\n')
+    const warnings = lines.filter(line => line.startsWith('::warning'))
+    expect(warnings).toHaveLength(2)
+    /* The sensitive payments route outranks every plain dark handler. */
+    expect(warnings[0]).toContain('file=server/api/payments/stripe.post.ts,')
+    expect(lines.at(-1)).toMatch(/^::notice title=evlog map::score \d+\/100 .*; \d+ more findings not shown$/)
+  })
+
+  it('github: keeps ten findings by default, which is what GitHub keeps', async () => {
+    const cwd = join(FIXTURES, 'nuxt-basic')
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--format', 'github', '--no-header', '--no-write'] })
+
+    expect(out.join('').trim().split('\n').filter(line => line.startsWith('::warning'))).toHaveLength(10)
+  })
+
+  it('github: with a baseline, only the regressions are emitted, as errors', async () => {
+    const cwd = await copyFixture('nuxt-basic')
+    const scanned = captureStdout()
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--json', '--no-header', '--no-write'] })
+    const { map: current } = JSON.parse(scanned.join('')) as { map: MapFile }
+
+    /* A baseline in which the health route passed wide-event: the scan now fails it, so that is the one regression. */
+    const health = current.routes.find(route => route.file === 'server/routes/health.get.ts')!
+    health.checks['wide-event'] = { ...health.checks['wide-event'], status: 'pass' }
+    await writeFile(join(cwd, 'evlog.map.json'), JSON.stringify(current))
+    vi.restoreAllMocks()
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--format', 'github', '--baseline', '--no-header', '--no-write'] })
+
+    const lines = out.join('').trim().split('\n')
+    expect(lines.filter(line => line.startsWith('::warning'))).toHaveLength(0)
+    expect(lines.filter(line => line.startsWith('::error file='))).toEqual([expect.stringMatching(/^::error file=server\/routes\/health\.get\.ts,line=\d+,title=evlog map%3A wide-event::/),])
+    expect(lines.at(-1)).toMatch(/^::error title=evlog map::score .*; regressed against /)
+    expect(process.exitCode).toBe(1)
+  })
+
+  it.each(['0', 'abc', '2.5'])('rejects --limit %s instead of falling back to the default', async (value) => {
+    const cwd = join(FIXTURES, 'hono-basic')
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--json', '--limit', value, '--no-header', '--no-write'] })
+
+    expect(JSON.parse(out.join('')).error.code).toBe('cli.MAP_INVALID_LIMIT')
+    expect(process.exitCode).toBe(1)
+  })
+
+  it('github: paths are rebased on GITHUB_WORKSPACE when the project is a package inside it', async () => {
+    const cwd = join(FIXTURES, 'hono-basic')
+    vi.stubEnv('GITHUB_WORKSPACE', resolve(FIXTURES, '../../..'))
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--format', 'github', '--no-header', '--no-write'] })
+
+    expect(out.join('')).toMatch(/^::warning file=test\/map\/fixtures\/hono-basic\/src\/health\.ts,line=5,/m)
+  })
+
+  it('github: a score under --min-score is an error and exits 1', async () => {
+    const cwd = join(FIXTURES, 'hono-basic')
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--format', 'github', '--min-score', '100', '--no-header', '--no-write'] })
+
+    expect(out.join('')).toMatch(/^::error title=evlog map::score \d+\/100 .*below --min-score 100$/m)
+    expect(process.exitCode).toBe(1)
+  })
+
+  it('refuses --json together with another --format', async () => {
+    const cwd = join(FIXTURES, 'hono-basic')
+    const out = captureStdout()
+
+    await runCommand(map, { rawArgs: ['--cwd', cwd, '--json', '--format', 'github', '--no-header', '--no-write'] })
+
+    expect(JSON.parse(out.join('')).error.code).toBe('cli.MAP_FORMAT_CONFLICT')
+    expect(process.exitCode).toBe(1)
   })
 })
