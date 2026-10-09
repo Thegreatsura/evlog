@@ -1,6 +1,6 @@
 # Vision
 
-How Evi sees images. The base model (`EVI_MODEL`, GLM 5.3 Flash) takes image
+How Evi sees images. The base model (`EVI_MODEL`, Claude Haiku 5.5) takes image
 parts natively, so there is nothing to select: an inbound attachment or a
 screenshot a tool returned during the turn reaches the model as it is, on the
 same call as the rest of the turn.
