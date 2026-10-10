@@ -1,5 +1,11 @@
 # evlog
 
+## 2.30.2
+
+### Patch Changes
+
+- [#794](https://github.com/evloghq/evlog/pull/794) [`bd3558d`](https://github.com/evloghq/evlog/commit/bd3558dbcc56965d8ff2d57ff4d2965db7b4280b) Thanks [@evlogai](https://github.com/apps/evlogai)! - Fix custom RegExp `redact.patterns` declared in `nuxt.config.ts` (or Nitro module options) being silently dropped: patterns are now serialized as `{ source, flags }` across the config bridges and rebuilt into RegExp on the server. A pattern object without a `source` field is reported instead of skipped, and a function-valued `redact.replacement` / `redact.transform` in the Nuxt module now prints the same warning the standalone Nitro modules already print.
+
 ## 2.30.1
 
 ### Patch Changes
