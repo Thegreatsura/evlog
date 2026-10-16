@@ -101,7 +101,7 @@ export interface NitroPluginEvlogConfig extends DevTerminalResolveInput {
   transport?: TransportConfig
 }
 
-/** @deprecated Renamed to {@link NitroPluginEvlogConfig}. Kept for backward compat. */
+/** @deprecated Removed in evlog v3. Use {@link NitroPluginEvlogConfig} instead. */
 export type EvlogConfig = NitroPluginEvlogConfig
 
 /**
