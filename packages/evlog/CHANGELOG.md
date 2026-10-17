@@ -1,5 +1,23 @@
 # evlog
 
+## 2.33.0
+
+### Minor Changes
+
+- [#856](https://github.com/evloghq/evlog/pull/856) [`25de5f0`](https://github.com/evloghq/evlog/commit/25de5f09f3e98049508cf0edf76d3dacc3cd2bd8) Thanks [@JustYannicc](https://github.com/JustYannicc)! - Add `issues` to the Sentry drain. With `createSentryDrain({ issues: true })`, `error` and `fatal` wide events are also sent as Sentry error events, so they open issues and trigger issue alerts. Events with a 4xx status (a thrown 404, 401 or validation 400) stay logs and open no issue. Each issue carries the wide event's trace context (`traceId`, `spanId`, `parentSpanId`), the same `trace_id` as its structured log, the error stack as frames, `service` and the configured `tags` as tags, `userId` or `user.id` as the user, and `METHOD /path` or `action` as the transaction. Events without a `traceId` get one generated, shared by the log and the issue. Issues are sent one at a time after the logs and are best-effort: a failed issue request does not fail the batch. The option defaults to `false`, so existing setups keep sending logs only.
+
+- [#872](https://github.com/evloghq/evlog/pull/872) [`8f3ccc7`](https://github.com/evloghq/evlog/commit/8f3ccc707f4032c0bfde4aa1d1c85c1f2ef60749) Thanks [@evlogai](https://github.com/apps/evlogai)! - Warn at runtime when a removed v2 API is used. Each deprecated API now prints one `console.warn` per process, on call, that names the replacement and states that the API is removed in v3. The warning is plain `console.warn` and never goes through evlog's logger or drains. It is silent when `NODE_ENV` is `production` or `test`, under Vitest or Jest, or when `EVLOG_NO_DEPRECATION_WARNINGS=1` (or `true`) is set.
+
+  Covered in this release: `evlog/browser` (use `evlog/http`), `createPostHogEventsDrain()` (use `createPostHogDrain({ mode: 'events' })`), the Axiom `token` option and its `AXIOM_TOKEN` / `NUXT_AXIOM_TOKEN` variables, the Better Stack `sourceToken` option and its `BETTER_STACK_SOURCE_TOKEN` / `NUXT_BETTER_STACK_SOURCE_TOKEN` variables, the Nuxt `evlog.axiom.token` option, and the eve `redactMessage` option. The Axiom and Better Stack alias warnings are no longer printed in production. Types and the `evlog/toolkit` storage re-export are marked `@deprecated` only.
+
+### Patch Changes
+
+- [#863](https://github.com/evloghq/evlog/pull/863) [`c7e8097`](https://github.com/evloghq/evlog/commit/c7e8097d862b5da5c6ca1e3d3a81a8f68189a19b) Thanks [@evlogai](https://github.com/apps/evlogai)! - Split Datadog log batches into requests of at most 1000 entries. The Logs intake accepts at most 1000 entries per request, but a batch above 1000 (from `batch.size` or a direct `sendBatchToDatadog` call) was sent as one request. It is now sent as several requests of up to 1000 entries each. Batches of 1000 or fewer are unchanged, and retry behavior is unchanged.
+
+- [#865](https://github.com/evloghq/evlog/pull/865) [`7dec758`](https://github.com/evloghq/evlog/commit/7dec75821ad794fd73bf5cd614ff0e1b7b6e3c98) Thanks [@evlogai](https://github.com/apps/evlogai)! - Send Datadog log batches gzip-compressed. The request carries `Content-Encoding: gzip`, as Datadog recommends for the Logs intake, which keeps larger batches further below the intake's 5 MB uncompressed payload limit. The payload and the response handling are otherwise unchanged.
+
+- [#864](https://github.com/evloghq/evlog/pull/864) [`1546dfb`](https://github.com/evloghq/evlog/commit/1546dfb181c461f8233086649de320eac04a2222) Thanks [@evlogai](https://github.com/apps/evlogai)! - Split Sentry log batches into envelopes of at most 100 logs. Sentry's log protocol does not allow more than 100 logs per `log` envelope, but a batch above 100 (from `batch.size` or a direct `sendBatchToSentry` call) was sent as one envelope. It is now sent as several envelopes of up to 100 logs each. Batches of 100 or fewer are unchanged.
+
 ## 2.32.0
 
 ### Minor Changes
