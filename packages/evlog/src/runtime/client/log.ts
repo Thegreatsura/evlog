@@ -1,5 +1,5 @@
 import type { Log, LogLevel, TransportConfig } from '../../types'
-import { cssColors, escapeFormatString, formatMessage, getCssLevelColor, hasMessageSpecifiers, isBrowser, isLevelEnabled, isLogLevel, isoNow } from '../../utils'
+import { cssColors, escapeFormatString, formatMessage, getCssLevelColor, hasMessageSpecifiers, isBrowser, isLevelEnabled, isLogLevel, isoNow, payloadFieldsHiddenBy, walkErrors } from '../../utils'
 
 /**
  * Browser DevTools often hide or bucket `console.debug` under "Verbose" in a way that looks like
@@ -75,7 +75,7 @@ function emitLog(level: LogLevel, event: Record<string, unknown>): void {
     level,
     service: clientService,
     ...identityContext,
-    ...event,
+    ...(removeErrorCycles(event, new WeakSet()) as Record<string, unknown>),
   }
 
   if (clientConsole) {
@@ -117,7 +117,7 @@ const ERROR_FIELDS = ['code', 'status', 'statusText', 'statusCode', 'statusMessa
  * `name`, `message` and `stack` live on the prototype, so spreading an Error
  * into an event yields nothing. Mirrors the shape the server logger stores.
  */
-function serializeError(error: Error, seen = new Set<unknown>()): Record<string, unknown> {
+function serializeError(error: Error, ancestors = new WeakSet<object>()): Record<string, unknown> {
   const serialized: Record<string, unknown> = {
     name: error.name,
     message: error.message,
@@ -125,20 +125,19 @@ function serializeError(error: Error, seen = new Set<unknown>()): Record<string,
   }
 
   const record = error as unknown as Record<string, unknown>
+  const hidden = payloadFieldsHiddenBy(error)
+  ancestors.add(error)
   for (const key of ERROR_FIELDS) {
-    if (key in error) serialized[key] = record[key]
+    if (key in error && !hidden.includes(key)) serialized[key] = removeErrorCycles(record[key], ancestors)
   }
-
-  if ('cause' in error) {
-    seen.add(error)
-    const { cause } = error
-    // A nested Error would JSON.stringify to {}, dropping its message entirely.
-    serialized.cause = cause instanceof Error && !seen.has(cause)
-      ? serializeError(cause, seen)
-      : cause
-  }
+  if ('cause' in error) serialized.cause = removeErrorCycles(error.cause, ancestors)
+  ancestors.delete(error)
 
   return serialized
+}
+
+function removeErrorCycles(value: unknown, ancestors: WeakSet<object>): unknown {
+  return walkErrors(value, ancestors, serializeError)
 }
 
 function createLogMethod(level: LogLevel) {

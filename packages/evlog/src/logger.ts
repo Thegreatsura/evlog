@@ -9,7 +9,7 @@ import { resolveDevTerminal } from './shared/dev-terminal'
 import { globalConfig } from './shared/globalRegistry'
 import { publishWideEvent } from './shared/wideEventChannel'
 import { EvlogError } from './error'
-import { colors, cssColors, detectEnvironment, elapsedMs, escapeFormatString, formatDuration, formatMessage, getConsoleMethod, getCssLevelColor, getLevelColor, hasMessageSpecifiers, isBrowser, isDev, isLevelEnabled, isoNow, matchesPattern } from './utils'
+import { colors, cssColors, detectEnvironment, elapsedMs, escapeFormatString, formatDuration, formatMessage, getConsoleMethod, getCssLevelColor, getLevelColor, hasMessageSpecifiers, isBrowser, isDev, isLevelEnabled, isoNow, matchesPattern, payloadFieldsHiddenBy, walkErrors } from './utils'
 
 const nativeStdoutWrite =
   typeof process !== 'undefined' && typeof process.stdout?.write === 'function'
@@ -796,23 +796,7 @@ function prettyPrintWideEvent(event: Record<string, unknown>): void {
 }
 
 function removeErrorCycles(value: unknown, ancestors: WeakSet<object>): unknown {
-  if (value === null || typeof value !== 'object') return value
-  if (ancestors.has(value)) return '[Circular]'
-  if (value instanceof Error) return serializeError(value, ancestors)
-
-  ancestors.add(value)
-  let changed = false
-  const visit = (item: unknown): unknown => {
-    const result = removeErrorCycles(item, ancestors)
-    if (!Object.is(result, item)) changed = true
-    return result
-  }
-  const copy = Array.isArray(value)
-    ? value.map(visit)
-    : Object.fromEntries(Object.entries(value).map(([key, item]) => [key, visit(item)]))
-  ancestors.delete(value)
-
-  return changed ? copy : value
+  return walkErrors(value, ancestors, serializeError)
 }
 
 /**
@@ -865,8 +849,9 @@ function serializeError(err: Error, ancestors = new WeakSet<object>()): Record<s
     const errorObj = serializeError(err.cause, ancestors)
     ancestors.delete(err)
     const wrapper = err as unknown as Record<string, unknown>
+    const hidden = payloadFieldsHiddenBy(err)
     for (const k of ['statusCode', 'statusMessage', 'data'] as const) {
-      if (wrapper[k] !== undefined) errorObj[k] = removeErrorCycles(wrapper[k], ancestors)
+      if (wrapper[k] !== undefined && !hidden.includes(k)) errorObj[k] = removeErrorCycles(wrapper[k], ancestors)
     }
     return errorObj
   }
@@ -877,6 +862,7 @@ function serializeError(err: Error, ancestors = new WeakSet<object>()): Record<s
     stack: isDev() ? compactStackForStorage(err.stack) : err.stack,
   }
   const errRecord = err as unknown as Record<string, unknown>
+  const hidden = payloadFieldsHiddenBy(err)
   ancestors.add(err)
   for (const k of ['code', 'status', 'statusText', 'statusCode', 'statusMessage', 'data', 'cause', 'internal'] as const) {
     if (k === 'cause' && isH3InputOf(err, err.cause)) {
@@ -886,7 +872,7 @@ function serializeError(err: Error, ancestors = new WeakSet<object>()): Record<s
       }
       continue
     }
-    if (k in err) errorObj[k] = removeErrorCycles(errRecord[k], ancestors)
+    if (k in err && !hidden.includes(k)) errorObj[k] = removeErrorCycles(errRecord[k], ancestors)
   }
   ancestors.delete(err)
 

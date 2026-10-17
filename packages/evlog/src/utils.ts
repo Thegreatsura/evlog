@@ -1,4 +1,5 @@
 import type { EnvironmentContext, LogLevel } from './types'
+import { isEvlogError } from './shared/error-brand'
 
 /**
  * Milliseconds elapsed since `startTime`, never negative.
@@ -286,4 +287,47 @@ export function isoNow(): string {
     _isoCachedPrefix = _isoDate.toISOString().slice(0, 19)
   }
   return `${_isoCachedPrefix}.${String(now % 1000).padStart(3, '0')}Z`
+}
+
+/**
+ * The payload fields (`data`, `internal`) an error's own `toJSON` leaves out,
+ * which its serialized form leaves out too. `EvlogError#toJSON` shapes the HTTP
+ * response and omits `internal`, which logs keep, so it does not count.
+ */
+export function payloadFieldsHiddenBy(error: Error): string[] {
+  const { toJSON } = error as { toJSON?: unknown }
+  if (typeof toJSON !== 'function' || isEvlogError(error)) return []
+  const shown: unknown = toJSON.call(error)
+  return ['data', 'internal'].filter(key => typeof shown !== 'object' || shown === null || !(key in shown))
+}
+
+/**
+ * Walks an event so an Error at any depth goes through `serializeError` and a
+ * cycle becomes `'[Circular]'`. A value holding neither is returned as it is.
+ * An object with its own `toJSON` keeps it: a copy would drop what that method
+ * leaves out.
+ */
+export function walkErrors(
+  value: unknown,
+  ancestors: WeakSet<object>,
+  serializeError: (error: Error, ancestors: WeakSet<object>) => Record<string, unknown>,
+): unknown {
+  if (value === null || typeof value !== 'object') return value
+  if (ancestors.has(value)) return '[Circular]'
+  if (value instanceof Error) return serializeError(value, ancestors)
+  if (typeof (value as { toJSON?: unknown }).toJSON === 'function') return value
+
+  ancestors.add(value)
+  let changed = false
+  const visit = (item: unknown): unknown => {
+    const result = walkErrors(item, ancestors, serializeError)
+    if (!Object.is(result, item)) changed = true
+    return result
+  }
+  const copy = Array.isArray(value)
+    ? value.map(visit)
+    : Object.fromEntries(Object.entries(value).map(([key, item]) => [key, visit(item)]))
+  ancestors.delete(value)
+
+  return changed ? copy : value
 }
