@@ -1,5 +1,13 @@
 # evlog
 
+## 2.34.1
+
+### Patch Changes
+
+- [#974](https://github.com/evloghq/evlog/pull/974) [`75389a3`](https://github.com/evloghq/evlog/commit/75389a3c2415aee4bbc003e766a3318b785bab64) Thanks [@evlogai](https://github.com/apps/evlogai)! - Widen the optional `nitro` peer range so that `nitro@3.0.261029-rc` installs without a peer conflict. Before, npm failed with ERESOLVE and pnpm printed a peer warning when a project used the Nitro release candidate with evlog 2.x.
+
+- [#963](https://github.com/evloghq/evlog/pull/963) [`15b833e`](https://github.com/evloghq/evlog/commit/15b833eca6b799dbc0bdfa2a7bbdcc2c256b3630) Thanks [@onmax](https://github.com/onmax)! - Keep request errors in Nitro 3 wide events when an earlier async error hook delays evlog's hook. Emit once without late-write warnings.
+
 ## 2.34.0
 
 ### Minor Changes
