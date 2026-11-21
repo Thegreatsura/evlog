@@ -1,5 +1,56 @@
 # evlog
 
+## 2.37.0
+
+### Minor Changes
+
+- [#1165](https://github.com/evloghq/evlog/pull/1165) [`d95d09c`](https://github.com/evloghq/evlog/commit/d95d09ce87fe50736f3921b2a4e281029f8f27ee) Thanks [@HugoRCD](https://github.com/HugoRCD)! - `createDrainPipeline` delivers buffered events when the process stops, without a shutdown hook of your own.
+
+  - On Node and Bun, every pipeline that holds events is flushed on `SIGTERM` and `SIGINT`, for up to 400 ms. Then the signal's default exit runs, so the process stops exactly as it would without evlog. When your app has its own listener for that signal, evlog flushes and leaves the exit to it. Buffered events used to be lost on a signal unless you flushed them yourself.
+  - On `beforeExit`, when the event loop runs out of work, pending pipelines flush to completion. A script that ends without calling `drain.flush()` no longer loses its last batch.
+  - The Nitro `close` hook flushes every pending pipeline, not only the `evlog.config.ts` drain. The Fastify plugin flushes on `onClose` and `EvlogModule` on `onApplicationShutdown`.
+  - A `flush()` call that starts while another is still sending now resolves once that delivery is done. It used to resolve at once, because the first call had already taken the events out of the buffer, so `await drain.flush()` before exiting could still lose them.
+  - A pipeline with nothing buffered is not tracked, and evlog adds no listener before the first pipeline receives an event.
+
+  `process.exit()` still ends the process without a flush, so keep `await drain.flush()` before it. A `process.on('SIGTERM', () => drain.flush())` listener is no longer needed; it also cancels Node's default exit, so remove it unless your app exits from it.
+
+- [#1150](https://github.com/evloghq/evlog/pull/1150) [`85369bb`](https://github.com/evloghq/evlog/commit/85369bb6602f3bf35d69fddb383a3cd1553ea55b) Thanks [@HugoRCD](https://github.com/HugoRCD)! - Every deprecation warning now links to its section of [What's coming in v3](https://www.evlog.dev/reference/migrate-v3), and more of what evlog 3 removes or changes now warns in development:
+
+  - `defineEvlogHook()` and `defineEvlogInstrumentation()` from `evlog/eve`, which evlog 3 replaces with the `@evlog/eve` extension for eve 1.0.
+  - `createLoggerStorage` and `applyDeprecatedAlias` imported from `evlog/toolkit`. Import `createLoggerStorage` from `evlog/toolkit/storage`, which does not warn.
+  - `createOTLPDrain()` without `recordShape` or `semanticConventions`, and `createPostHogDrain()` without `recordShape`, since evlog 3 changes their defaults to `'compact'` and `true`. Set them to `'json'` and `false` to keep the current output.
+
+  Like the existing warnings, these print once per process and stay silent in production, in tests, and with `EVLOG_NO_DEPRECATION_WARNINGS=1`.
+
+### Patch Changes
+
+- [#1145](https://github.com/evloghq/evlog/pull/1145) [`549e907`](https://github.com/evloghq/evlog/commit/549e907c8ca76f11164ee7aa8136d96f2d7de6bc) Thanks [@HugoRCD](https://github.com/HugoRCD)! - HTTP drains retry only failures that can succeed later, and wait as long as the provider asks.
+
+  - Retried: network errors, timeouts, and `408`, `429`, `502`, `503` and `504` responses, plus Datadog's `500`, which its intake documents as retryable. Any other status, such as a `400` for a malformed payload, is sent once. Inside `createDrainPipeline` a `400` used to cost `retry.maxAttempts` requests before the batch was dropped; it now goes to `onDropped` after one. A plain `500` is no longer retried outside Datadog.
+  - `Retry-After` (seconds or an HTTP date) replaces the backoff delay. In `createDrainPipeline`, a `Retry-After` longer than `retry.maxDelayMs` pauses the pipeline and keeps the batch buffered until the delay has passed, where it used to retry after 1 s and 3 s and then drop the batch. `flush()` does not wait out a pause: it hands the buffered events to `onDropped`.
+  - Retry delays are jittered, between half and all of the configured backoff.
+  - HyperDX, Sazabi and PostHog logs (`mode: 'logs'`) make one request per pipeline attempt, like the other adapters. Against a failing backend, one event cost 9 requests inside a default pipeline; it now costs 3.
+  - `httpPost` throws a `DrainDeliveryError` (exported from `evlog/toolkit`) carrying `status`, `retryable`, `retryAfterMs` and the response `headers`. The message is unchanged. A custom drain can throw one with `retryable: false` so the pipeline drops the batch without retrying. Plain errors thrown by a custom drain are retried as before.
+
+- [#1162](https://github.com/evloghq/evlog/pull/1162) [`6ec6f8f`](https://github.com/evloghq/evlog/commit/6ec6f8fbc4904243f8a5643e4f8ef8809fbf655c) Thanks [@HugoRCD](https://github.com/HugoRCD)! - The OTLP drain reads the `partialSuccess` an OTLP collector can return with a `2xx`, in JSON and protobuf responses. HyperDX, Sazabi and PostHog logs (`mode: 'logs'`) send through it and get the same handling.
+
+  - When the collector rejected records, the request fails with a `DrainDeliveryError` that is not retried and carries the count in `rejected`. Those records used to be lost without a log line. `sendBatchToOTLP` and `sendToOTLP` now throw in that case instead of resolving.
+  - In `createDrainPipeline`, `onDropped` gets the batch with reason `rejected`, and `drain.stats()` counts only the rejected records as dropped and the rest as delivered. A custom drain can do the same by throwing a `DrainDeliveryError` with `retryable: false` and `rejected`.
+  - A `partialSuccess` with only an `errorMessage` is logged with `console.warn`.
+
+- [#1145](https://github.com/evloghq/evlog/pull/1145) [`549e907`](https://github.com/evloghq/evlog/commit/549e907c8ca76f11164ee7aa8136d96f2d7de6bc) Thanks [@HugoRCD](https://github.com/HugoRCD)! - `createDrainPipeline` reports every event it drops.
+
+  - `onDropped(events, error, reason)` gets a third argument: `'buffer-full'`, `'rejected'` (a status such as `400` that no retry fixes), `'retries-exhausted'` or `'rate-limited'` (`flush()` ran during a provider's `Retry-After`). Existing two-argument callbacks keep working.
+  - Without `onDropped`, buffer overflow used to drop events with no log line. Every drop is now logged with `console.error`, at most once a minute with the count per reason, and once more on `flush()` for what is left.
+  - `drain.stats()` returns `{ delivered, dropped }`, the events delivered and dropped per reason since the pipeline was created.
+
+- [#1145](https://github.com/evloghq/evlog/pull/1145) [`549e907`](https://github.com/evloghq/evlog/commit/549e907c8ca76f11164ee7aa8136d96f2d7de6bc) Thanks [@HugoRCD](https://github.com/HugoRCD)! - The Sentry drain honours Sentry's rate limits per data category, like the official SDKs.
+
+  - It reads `X-Sentry-Rate-Limits` and `Retry-After` on every response, including accepted ones, and remembers them per DSN.
+  - While error events are limited, `issues: true` skips issues without sending them and logs one warning per limit window. The logs keep going out. Before, a burst of 500 errors made 500 issue requests while Sentry was dropping them.
+  - While logs are limited, `sendBatchToSentry` rejects without sending, with a `DrainDeliveryError` whose `retryAfterMs` is the remaining delay, so `createDrainPipeline` holds the batch until the limit expires.
+  - An issue Sentry rejects (such as a `400`) no longer stops the other issues of the batch. A transient failure still does.
+
 ## 2.36.0
 
 ### Minor Changes
